@@ -1,0 +1,34 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+bun.lockb
+*.tsbuildinfo
+
+# Build output
+dist/
+build/
+.next/
+
+# Runtime artifacts
+*.log
+tmp/
+runs/
+sandbox-out/
+
+# Agent harness working files
+AGENTS/permissions/*/
+AGENTS/message/**/
+!AGENTS/message/README.md
+
+# Operator tooling, not product — kept local, not published
+skills/
+skills-lock.json
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
