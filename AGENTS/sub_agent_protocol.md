@@ -65,7 +65,7 @@ The HEAD will either widen your scope, issue a second brief, or defer it to a la
 - Keep changes consistent with the surrounding code: structure, naming, style, patterns.
 - Do not add dependencies unless the brief asks.
 - Never write secrets, tokens, keys, or `.env` values into the repo.
-- Do not run `git commit` or `git push`. Leave the working tree for the HEAD.
+- Do not run `git commit` or `git push`. Leave the working tree for the HEAD. **Exception: GITMASTER, and only when its brief explicitly says so.**
 - Do not use the `subagent` tool.
 - Do not run destructive operations against shared data (database rows, shared files) unless the brief explicitly says so, and says how to clean up.
 - If a verification command fails because of the environment (not your change), report it — do not paper over it and do not "fix" unrelated code to make it green.

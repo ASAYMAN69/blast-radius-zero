@@ -29,7 +29,7 @@ Anything else — a file it does not own, a tool the brief did not name, a comma
 
 No permission can unlock these. Do not ask; do not do them.
 
-- `git commit` / `git push` — the HEAD commits, always.
+- `git commit` / `git push` — the HEAD commits, always. **One exception: GITMASTER**, and only when the HEAD's brief explicitly instructs it. No other agent may be granted this.
 - Using the `subagent` tool — workers never spawn workers.
 - Writing secrets, tokens, keys, or `.env` values into the repo.
 - Destructive operations on shared data: `DROP`, `TRUNCATE`, `DELETE` on shared rows, rewriting an already-applied migration, `VACUUM FULL`, blocking indexes on hot tables.

@@ -37,28 +37,42 @@
 | D-012 | 2026-10-23 | New role **BUSINESS** added to the roster (`docs/business/**`) — market, buyer, pricing, revenue model, pitch narrative. Wave 0 runs it **in parallel** with the infra probe because the rubric makes the commercial story a build artifact | `AGENTS/roles/BUSINESS.md`, brief 02 |
 | D-013 | 2026-10-23 | Hard gates to respect at all times: **no working demo link ⇒ Application of Technology capped at 2**; **partial repo ⇒ capped at 3**; **no Vultr GPUs**; agent LLM calls must go through Vultr Serverless Inference in prod | `JUDGING-CRITERIA.md` §3, `HACKATHON.md` §9 |
 | D-014 | 2026-10-23 | The **novel element must be the containment model**, not the agent. "We built a code agent" scores 1–2 on Originality | Rubric, *Originality* ladder |
+| D-015 | 2026-10-23 | **Stack = TypeScript + Node 24 + React/Vite** (coordinator's call). Persistence = **`node:sqlite`**, built into Node 24 — no database server on a 1.26 GB box | Coordinator. `node:sqlite` verified working on this machine |
+| D-016 | 2026-10-23 | **Local sandbox = bubblewrap (`bwrap`) + cgroup v2 + rlimits.** Coordinator delegated the call: "whatever fits the best and doesn't contradict the rulebook" | bwrap present, cgroup v2 present, no Docker, no `/dev/kvm`. Namespace isolation is *stronger* than a container and costs no daemon. Satisfies process isolation + resource caps + lifecycle discipline |
+| D-017 | 2026-10-23 | **No Vultr account for now.** Instead, a **Vultr portability contract**: the prod tier is *written* in Wave 1 behind the `SandboxProvider` interface with the Vultr API mocked in tests, and `deploy/bootstrap.sh` takes a fresh Ubuntu 24.04 instance to a running, health-checked service in one command. Kickoff = deploy + swap the provider, not a build | Coordinator: "make sure our infra is compatible with whatever they're saying so that when the kickoff starts and I migrate the codebase into their infra it sits perfectly" |
+| D-018 | 2026-10-23 | **Repo is public from day one.** Created `github.com/ASAYMAN69/blast-radius-zero` (public, MIT `LICENSE`, `main` branch, first commit `4895b5a`). `skills/` and `skills-lock.json` are **excluded from the published repo** — operator tooling, not product | Coordinator: "public from day one … create a github repo under my ASAYMAN69 account using gh cli". `gh` is authed as ASAYMAN69 with `repo`+`workflow` scopes |
+| D-019 | 2026-10-23 | **New role GITMASTER** (`AGENTS/roles/GITMASTER.md`): the **only** agent permitted to `git commit` / `git push` / `gh pr merge`, and only on the HEAD's explicit instruction. Owns branches, PRs, merge, diff review, CI/CD, repo hygiene. Never edits product source. **Always serialized** — never runs concurrently with an open write scope | Coordinator: "i also need another subagent named GITMASTER that handles pr reviews, merge, branch, push, diff, ci cd etc etc" |
+| D-020 | 2026-10-23 | **Deployment and the public demo URL are deferred** to post-kickoff. The build phase target is "make the project ready before actual work" | Coordinator: "don't worry bout public demo url … we can only obtain it after deployment. before deployment, we making the project ready before actual work" |
+| D-021 | 2026-10-23 | **`docs/VISION.md` is the vision of record** and the HEAD's scope | Coordinator: "i want you to make sure that everything sat right with you and we have a clear vision" |
 
 ---
 
 ## 3. Open questions for the coordinator
 
-| # | Question | Status |
+**Answered 2026-10-23 — recorded as D-015…D-021:**
+
+| # | Question | Answer |
 |---|---|---|
-| Q-001 | **Local sandbox tier** — bwrap (recommended) vs. install Docker vs. defer | asked |
-| Q-002 | **Stack** — TypeScript+Bun+React (recommended) vs. TS+Node+React vs. Python+FastAPI+React vs. Go control plane | asked |
-| Q-003 | **Public demo hosting** — Vultr VM + domain (recommended, brief-compliant) vs. Vultr VM + Cloudflare Tunnel vs. Vercel frontend + Vultr API | asked |
-| Q-004 | **Vultr account now?** — free account + new email + payment method, so we can verify the real API before kickoff | asked |
-| Q-005 | **Repo public from day one?** — the submission judges "setup and documentation" | asked |
-| Q-006 | **Inference fallback** — a second provider/key so a demo never dies on a rate limit | asked |
-| Q-007 | **Demo video** — who records it, on what machine, and do we build a scripted, repeatable "containment moment" command so it can be re-shot? | asked |
-| Q-008 | **Team size (1–6)** and who presents | asked |
-| Q-009 | **Domain** — is there one we can point at the demo? | asked |
-| Q-010 | **Extra access the coordinator is willing to give**: GitHub token, Vercel/Cloudflare token, a second LLM key, a Vultr card | asked |
-| Q-011 | **Flagship workload** — A Self-Healing Runner (recommended) / B Site QA Sweep / C Research with Receipts / own | deferred — coordinator wants prerequisites first |
-| Q-012 | **Product scope for the demo** — no auth, single shared deployment, public landing page? | deferred |
-| Q-013 | **Do you want the BUSINESS workstream dispatched now?** (brief 02, product-agnostic, runs in parallel with the probe) | asked |
-| Q-014 | **Pitch assembly owner** — who turns the outline into the slide PDF and records the video? Needs a named human. | asked |
-| Q-015 | **Do we build the pitch/deck tooling** (a scriptable deck generator using `skills/pitch-deck`)? | asked |
+| Q-001 | Local sandbox tier | bwrap + cgroup v2 (D-016) |
+| Q-002 | Stack | TypeScript + Node + React/Vite (D-015) |
+| Q-003 | Public demo hosting | **Deferred** to post-kickoff (D-020) |
+| Q-004 | Vultr account now | **No** — build for portability instead (D-017) |
+| Q-005 | Repo public from day one | **Yes** — created on GitHub (D-018) |
+| Q-006 | Inference fallback provider | still open |
+| Q-013 | Dispatch wave 0 | **Not yet** — vision approval first |
+
+**Still open:**
+
+| # | Question | Why it matters |
+|---|---|---|
+| Q-011 | **Flagship workload** — A Self-Healing Runner (recommended) / B Site QA Sweep / C Research with Receipts / own | The one product decision. The `SandboxProvider` interface is vertical-agnostic, so a late call costs a workload module, not a rewrite |
+| Q-014 | **Pitch assembly owner** — who turns the outline into the slide PDF and records the video? Needs a named human. | *Presentation* is gated on a sub-5-minute video + PDF. A code-only plan cannot score past 3 |
+| Q-015 | **Do we build pitch tooling** (scriptable deck generator via `skills/pitch-deck`)? | Deterministic deck generation beats hand-editing slides 20 times |
+| Q-016 | **Inference fallback** — a second provider/key so a live demo never dies on a rate limit | Groq's free tier rate-limits; a 429 during the video is a lost 2 points |
+| Q-017 | **Domain** — do you have one to point the deployed demo at? | Only needed at deploy time (post-kickoff) |
+| Q-018 | **Extra access** — GitHub is done (authed). Still wanted: a second LLM key for fallback, a Vultr card at kickoff, a Cloudflare/Vercel token if we want a tunnel | Ask before kickoff, not during it |
+| Q-019 | **May agents install npm packages and use the cached Playwright chromium?** | `~/.cache/ms-playwright` already has chromium-1234/1243 — no download needed. npm install is implied but I want it on the record |
+| Q-020 | **Is the 8 Nov 12:00 UTC code freeze acceptable?** | Leaves 11 hours for pitch, video, and polish only |
 
 ---
 
@@ -96,7 +110,11 @@ Host: `POWOWL` · Linux 7.1.5 Kali amd64 · 4 vCPU · **3.8 GB RAM total, ~1.26 
 | `firejail`, `nsjail`, `systemd-nspawn` | absent | Not needed while `bwrap` is present. |
 | Runtimes | Node 24.19, Bun 1.3.14, Python 3.14.8, Go 1.27.1 | All available. |
 | PostgreSQL | client tools only, **no server running** | Prefer embedded SQLite (Bun has `bun:sqlite` built in) — no server on a 1 GB box. |
-| Chrome/Chromium | running on this box | Playwright browsers may still need a separate download. |
+| Chrome/Chromium | running on this box | `~/.cache/ms-playwright` already holds **chromium-1234 + chromium-1243** — no 150 MB download needed for browser work. |
+| `gh` CLI | **2.102.0, authed as `ASAYMAN69`** — scopes `gist, read:org, repo, workflow` | Repo create/push and Actions/CI management all work. `repo`+`workflow` is exactly what GITMASTER needs. |
+| `node:sqlite` | **works natively** on Node 24.19 | No database server, no native compile. Persistence for the run store and audit trail. |
+| `ffmpeg` | present at `/usr/bin/ffmpeg` | Video assembly for the pitch. |
+| git identity | `ASAyman <asayman669@gmail.com>` global | Commits are already attributed. |
 | Free ports | 8099, 1716 taken | 8787 (control plane) is free. |
 | Container/VM? | `systemd-detect-virt` → none (bare metal) | `/dev/kvm` still absent. |
 
@@ -111,22 +129,25 @@ brz/
 ├── AGENT.md                 # harness rules for the main agent
 ├── HACKATHON.md             # the product brief (restructured) — requirements source
 ├── JUDGING-CRITERIA.md      # the rubric + derived BRZ scorecard — what caps what
+├── docs/VISION.md           # ★ the vision of record — what we are building and why
 ├── STATE.md                 # THIS FILE — session state, decisions, change log
 ├── README.md                # orientation
+├── LICENSE                  # MIT — the submission must be MIT-compliant
 ├── .env / .env.example      # secrets / template
 ├── .gitignore
 ├── scripts/envcheck.sh      # presence check, never prints values
+├── .git/                    # single repo → github.com/ASAYMAN69/blast-radius-zero (public)
 ├── AGENTS/
 │   ├── delegation_protocol.md · sub_agent_protocol.md · agent_roles.md
 │   ├── brief_template.md · scope_ledger.md
-│   ├── roles/<AGENT>.md     # standing card per worker
+│   ├── roles/<AGENT>.md     # standing card per worker (9 roles)
 │   ├── permissions/         # PROTOCOL.md + request/decision files
-│   ├── briefs/              # ← what a worker reads
+│   ├── briefs/              # ← what a worker reads (2 ready)
 │   ├── completion/ · message/<agent>/ · reports/ · features/
 ├── docs/architecture/       # ARCHITECT output (probe lands here)
 ├── docs/business/           # BUSINESS output (market lands here)
-├── skills/                  # 17 skills
-└── (to be created) backend/ frontend/ sandbox/   ← after the stack decision
+├── skills/                  # 17 skills — LOCAL ONLY, not published
+└── (to be created) backend/ frontend/ deploy/   ← after vision approval
 ```
 
 ---
@@ -148,6 +169,9 @@ brz/
 
 | When | What |
 |---|---|
+| 2026-10-23 | **GitHub repo created**: `github.com/ASAYMAN69/blast-radius-zero` — public, MIT `LICENSE`, `main`, first commit `4895b5a`. `.env` verified unstaged; `skills/` excluded from publish. `gh` confirmed authed as ASAYMAN69 with `repo`+`workflow`. |
+| 2026-10-23 | **New role GITMASTER** (`AGENTS/roles/GITMASTER.md`) — the only agent allowed to commit/push/merge, only on an explicit HEAD instruction; never edits product source; always serialized. Mailbox created. Added to `agent_roles.md`, `AGENT.md` §2, scope ledger. The no-commit rule in `permissions/PROTOCOL.md` §3, `sub_agent_protocol.md` §4, and `AGENT.md` §2 now carries that single exception. |
+| 2026-10-23 | **`docs/VISION.md` written** — the vision of record: thesis, the seven defining decisions, the Vultr portability contract, repo layout, the 7-wave build plan, the three-artifact owner table, a 8-row risk register, and the one-paragraph narrative. HEAD's scope extended to include it. |
 | 2026-10-23 | `JUDGING-CRITERIA.md` (coordinator-supplied) restructured into scorecard tables + a derived BRZ working scorecard. Consequences propagated into `HACKATHON.md` §7.4 and §9 (new §9.2 scoring gates) and into decisions D-010…D-014. |
 | 2026-10-23 | New role **BUSINESS** (`AGENTS/roles/BUSINESS.md`), mailbox created, added to `agent_roles.md` + `AGENT.md` §2 + scope ledger. New brief `AGENTS/briefs/02-market-and-monetization.md` (19 items, product-agnostic, parallel to the probe). |
 | 2026-10-23 | `STATE.md` created as the **state of record** — survives a context compaction. `AGENT.md` now points to it. |
@@ -161,9 +185,17 @@ brz/
 
 ## 8. Next actions
 
-1. **Coordinator answers Q-001…Q-010.** Everything else is blocked on the stack and sandbox decisions.
-2. **Dispatch the probe** (already written, product-neutral, no Vultur access needed):
-   `INVOKE: ARCHITECT` → `Read AGENTS/briefs/01-vultr-c1-capability-probe.md and start working`
-3. **Then the first build brief** — after Q-001/Q-002 land, write brief `02` for the sandbox provider interface + local bwrap tier. Design it so the Vultr tier slots in behind the same interface at kickoff.
-4. **Repo init** (D-008): single repo at root, public per Q-005, with a README that already reads like a submission.
-5. Keep `AGENT.md` `<projectInfo>` as the append-only log; this file is the live state.
+1. **Coordinator approves `docs/VISION.md` or corrects it.** Everything else waits on this — that is what "make sure everything sat right and we have a clear vision" means.
+2. **Coordinator answers Q-011 (flagship workload).** The `SandboxProvider` interface is vertical-agnostic, so this can land late — but not after Wave 2.
+3. **Then dispatch Wave 0** — the two product-agnostic briefs already written:
+   ```
+   INVOKE: ARCHITECT
+   Read AGENTS/briefs/01-vultr-c1-capability-probe.md and start working
+
+   INVOKE: BUSINESS
+   Read AGENTS/briefs/02-market-and-monetization.md and start working
+   ```
+   Disjoint write scopes (`docs/architecture/…` vs `docs/business/…`), so they cannot collide.
+4. **Brief 03 (Wave 1, BACKEND)** — drafted after the vision is approved: `SandboxProvider` interface + `BwrapProvider` + `VultrVMProvider` (mocked) + OpenAI-compatible inference client + capability broker + egress proxy + `node:sqlite` run store + `deploy/bootstrap.sh`. Ships the **Vultr portability contract** as acceptance criteria.
+5. **Git hygiene**: `GITMASTER` takes over branches/PRs/CI once the product code exists. Until then the HEAD commits.
+6. Keep `AGENT.md` `<projectInfo>` as the append-only log; this file is the live state.

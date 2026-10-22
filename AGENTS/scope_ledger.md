@@ -43,6 +43,10 @@ These are claimed for the lifetime of the project, independent of waves. A wave 
 | TESTER | `AGENTS/reports/**` (read-only on product code) |
 | DOCS | `docs/**` except `docs/architecture/**` and `docs/design/**` |
 | BUSINESS | `docs/business/**` |
+| GITMASTER | `.github/**`, `scripts/ci/**`, `docs/dev/**` + git/GitHub operations |
+| HEAD | `AGENTS/**`, `AGENT.md`, `STATE.md`, `TODO.md`, `docs/VISION.md` |
+
+**GITMASTER is serialized.** Never dispatch a GITMASTER task while another agent holds an open write scope, and never dispatch two GITMASTER tasks at once. The repository is a single shared mutable resource; concurrent writers corrupt it.
 | HEAD | `AGENTS/**`, `AGENT.md`, `TODO.md` |
 
 ## Overlap examples (learn from these)

@@ -14,9 +14,14 @@
 | **TESTER** | `AGENTS/reports/**` only | everything | Verification reports — **never** product code |
 | **DOCS** | `docs/**` (except the above) | everything | README, guides, reference, changelog, release notes |
 | **BUSINESS** | `docs/business/**` | everything | Market, buyer, pricing, revenue model, pitch narrative, competitive analysis |
-| **HEAD** | `AGENTS/**`, `AGENT.md`, `STATE.md`, `TODO.md`, `docs/architecture/**` | everything | Briefs, ledger, review, integration, commits |
+| **GITMASTER** | `.github/**`, `scripts/ci/**`, `docs/dev/**` + git/GitHub operations | everything | Branches, commits, PRs, merge, diff review, CI/CD, repo hygiene |
+| **HEAD** | `AGENTS/**`, `AGENT.md`, `STATE.md`, `TODO.md`, `docs/VISION.md` | everything | Briefs, ledger, review, integration, commits |
 
 **HEAD writes no product code by default.** If the coordinator says "you do this one yourself", the HEAD takes the code scope for that brief and releases it in the ledger like anyone else.
+
+**GITMASTER is the single exception to the no-commit rule.** Every other agent leaves the working tree untouched. GITMASTER may run `git commit` / `git push` / `gh pr merge` **only when the HEAD's brief tells it to**, and it never edits product source to make CI green.
+
+**GITMASTER is always serialized.** The repository is one shared mutable resource; it never runs concurrently with an agent that has open write scopes, and never runs two tasks at once. The HEAD enforces this in `AGENTS/scope_ledger.md`.
 
 ## Scope escalation — everyone, including the HEAD
 
