@@ -45,6 +45,7 @@ All configuration is env. **No host, port, key, model, or URL in source.** `.env
 | `OPENAI_ENDPOINT` | OpenAI-compatible base URL |
 | `OPENAI_MODEL` | model id |
 | `OPENAI_TIMEOUT_MS`, `OPENAI_MAX_RETRIES` | transport tuning |
+| `BRZ_API_TARGET` | Vite dev-server proxy target (server-side only; never in the bundle) |
 | `PORT` | control-plane port |
 | `NODE_ENV` | mode |
 
@@ -56,6 +57,12 @@ The workspace manifests, the three workspace `tsconfig.json` files, the root `pa
 - The `extends` path is `../tsconfig.base.json` (the design doc's `../../` assumed `packages/backend` and fails with `TS5083`).
 - The backend has **no emit step** — `build` is `tsc --noEmit`, by design. The backend ships as source.
 - The backend `test` script is `node --test` (Node 24 discovers `*.test.ts`).
+
+## The secret rule
+
+`.env` holds the values and is **gitignored**; `.env.example` is the blank template. **No secret is ever written into a tracked file, a log line, a response, a fixture, or a commit.**
+
+`bash scripts/secret-scan.sh` (or `npm run secret-scan`) checks the tracked files, the index, the untracked-and-unignored files, and the entire git history, and prints only paths and line numbers — never a secret. It is part of the acceptance criteria for any brief that touches deployment, and it becomes a CI gate in wave 4.
 
 ## Non-negotiables
 
