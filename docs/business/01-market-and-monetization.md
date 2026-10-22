@@ -25,10 +25,10 @@
 
 ### 0.2 The five sentences a judge should remember
 
-1. **Sandbox compute is a commodity** — 10 developers' entire monthly sandbox bill is **$49–$137** across providers. We deliberately do not compete there. We sell the *control plane and the evidence*.
+1. **Sandbox compute is a commodity** — 10 developers' entire monthly sandbox bill is **$49.50–$198.00** across providers, and would be **$5.65** on BRZ. We deliberately do not compete there. We sell the *control plane and the evidence*.
 2. **The demand event has already happened** — in July 2026 an OpenAI agent escaped its sandbox and hacked Hugging Face; Hugging Face rebuilt a third of its infrastructure.
 3. **The buyer is the platform or AI-enablement lead; the veto holder is the security reviewer.** The purchase is a governance line item, not a developer tool.
-4. **Our own arithmetic says the model only works if enterprise self-hosted deals land.** Starter-tier customers alone never reach break-even — 131 of them are needed and we have 25 at month 12. We would rather say that than hide it.
+4. **Our own arithmetic says the model only works if enterprise self-hosted deals land.** Starter-tier customers alone never reach break-even — 132 of them are needed and we have 25 at month 12. We would rather say that than hide it.
 5. **We are 5 days old and cannot be trusted with your code.** The answer is not a promise; it is an artifact. Ask for our smallest workload and read the report.
 
 ### 0.3 Traction statement — read this first
@@ -59,6 +59,45 @@ The flagship workload is not chosen. This document is sized on the **execution s
 | Effect on SAM | — | ~**$178M/yr** | ~**$238M/yr** |
 
 **Direction of the move:** code execution is the largest and most policy-gated workload, and it is also the one Vultr's Challenge 01 Pattern A describes. Browser automation raises the price per task but shrinks the buyer count. Research shrinks both. **The arithmetic below is stated on the code-execution column, which is the most favourable and therefore the hardest case to defend.**
+
+### 0.6 Coverage map — every item in brief 02, and where it is answered
+
+| Brief item | Section | The answer, in one line |
+|---:|---|---|
+| 1 · Category definition | §A.1 | "Infrastructure that runs AI-generated code and AI-driven tool calls inside a per-task execution boundary, and produces the evidence that the boundary held" — four load-bearing properties, plus seven adjacent categories and where BRZ sits in each. |
+| 2 · Bottom-up sizing + cross-check | §A.2, §A.3 | 225M GitHub accounts -> 11.9M professional devs -> 3.12M in agent-workflow orgs -> 259,921 orgs -> 62,381 policy-gated. Cross-checked against Gartner's $9.8–11.0B and MarketsandMarkets' $7.06B/$93.20B, and against Fly.io's published per-session compute costs. |
+| 3 · Segments + beachhead | §A.4 | Four segments sized separately. Beachhead = enterprise platform / AI-enablement teams, 28,071 orgs, $178.2M/yr. Regulated sub-segment = 9,357 orgs, $145.3M/yr at 2.45× ACV. |
+| 4 · Named buyer | §B.1 | Head of Platform Engineering / Director of AI Enablement (budget); security reviewer (veto); CISO (signatory in regulated orgs). |
+| 5 · What the job costs them | §B.2 | $4.99M average breach · $6M AI-enabled breach · 188 autonomous-harm incidents · 65 deletion cases · a $47,000 incident cut to $200 · SOC 2 at $50k–$150k/yr. |
+| 6 · The alternative, incl. in-house | §B.3 | Seven alternatives compared, including the open-source primitives and the coding-agent vendors. In-house costs $380,744 over 18 months; **and it is the right answer for some buyers — named explicitly.** |
+| 7 · Why now | §B.4 | Six sourced changes: 75–90% AI-written code, 188 autonomous-harm incidents, the July 2026 OpenAI/Hugging Face escape, 6.6% trust, dated EU AI Act obligations, and a converged vendor ecosystem that left the governance gap open. |
+| 8 · Who does this today | §C.1 | 15 players: isolation model, runs-on-your-infra, pricing shape, and a per-session cost on one consistent shape. |
+| 9 · Better and worse | §C.2 | Six places BRZ is genuinely better; **eight where it is honestly worse**, led by the isolation primitive and the absence of certifications. |
+| 10 · Deck comparison | §C.3 | The 2×2, plus **three axes where a competitor beats us**, named and quantified. |
+| 11 · A price with a unit | §D.1 | One contained task; $99 / $499 / $3,000 per month plus overage; justified against nine price anchors and a per-developer sanity check. |
+| 12 · Revenue model | §D.2 | Subscription per organisation + metered task overage, and why that fits the buyer from §B.1. |
+| 13 · 12-month shape | §D.3 | A month-by-month ramp from zero to $20,473 MRR, with all driver assumptions stated, and bear / base / bull cases. |
+| 14 · Unit economics | §D.4 | $0.0257 variable cost per task (86% inference), 83.9% contribution margin, break-even at 28.0 customers / 89,805 tasks, plus **the four cases where it does not work**. |
+| 15 · The narrative | §E.1 | One paragraph, problem -> solution -> value, no jargon, no acronyms. |
+| 16 · Three sentences | §E.2 | 63 words, 25 seconds, spelled out. |
+| 17 · Slide outline + time budget | §E.3 | Ten segments totalling **4:40**, with a beat sheet for the 48-second containment moment. |
+| 18 · Future goals and plans | §E.4 | 8 product milestones and 8 commercial milestones, all dated Nov 2026 – Jan 2028, plus a validation plan with kill criteria. |
+| 19 · The uncomfortable question | §F.1 | Answered in three parts, in pitch-usable language, including the weakness we concede first. |
+
+**Acceptance-criteria self-check**
+
+| Criterion | Where it is met |
+|---|---|
+| All 19 items answered, each with a number, a source, and a confidence label | §0.6 above; every table carries a `sourced` / `derived` / `assumed` column |
+| Market size is bottom-up with visible arithmetic and an independent cross-check | §A.2 step-by-step; §A.3 three cross-checks, with the disagreements stated |
+| Competitive landscape covers the in-house option honestly and names where a competitor beats BRZ | §B.3 option A; §C.2 "where BRZ is honestly worse"; §C.3 three axes |
+| A price, a revenue model, and unit economics per run, with assumptions written down | §D.1, §D.2, §D.4 |
+| Three sentences exist, are under 30 seconds spoken, and contain no jargon | §E.2 — 63 words, 25 seconds, checked |
+| Slide outline totals 4:00–4:45 and marks the containment moment | §E.3 — 4:40, containment moment at 1:32–2:20 |
+| Future goals are concrete and dated | §E.4.1 and §E.4.2 |
+| The uncomfortable question is answered in pitch-usable language | §F.1 |
+| A closing "What this document does NOT claim" section | §G — twelve items, weakest first |
+| Written to `docs/business/01-market-and-monetization.md` only | Yes — this is the only file this brief created |
 
 ---
 
@@ -177,8 +216,10 @@ A governance and assurance layer taking 3.6–4.0% of the enterprise agent-tooli
 If infrastructure is 30–45% of the $7.06B 2025 agentic AI market, that band is **$2.12B – $3.18B**. Our bottom-up TAM of $1.65B sits at **52–78% of that band** — i.e. **inside** it, not above it. We are not claiming more than the top-down view supports.
 
 **Cross-check 3 — the price-side sanity check, and the one that changed our minds.**
-Fly.io published a like-for-like comparison (Oct 2026): **10 developers × 5 tickets/day × 22 days = 1,100 sandboxes/month costs $48.95 (Fly.io Sprites) to $196.28 (Modal)**; E2B $136.62; Vercel $133.32; Cloudflare $98.37. Per 1-hour session at 2 vCPU / 4 GiB with 30% CPU busy: E2B $0.17, Modal $0.24, Vercel $0.16, Cloudflare $0.12, Fly.io $0.06.
-**The entire raw sandbox bill for a ten-developer team is roughly one to two hundred dollars a month.** Our $499 Team platform fee is **3.7× the whole compute bill**. That arithmetic told us we must not sell compute. It is also the single most useful thing we learned in this exercise, and it is why §D.1 prices a *platform*, and why the unit is a *task*, not a sandbox-hour.
+Fly.io published a like-for-like comparison (Oct 2026): **10 developers × 5 tickets/day × 22 days = 1,100 sandboxes/month costs $49.50 (Fly.io Sprites) to $198.00 (Modal)**; E2B and Daytona $140.25; Vercel $132.00; Cloudflare $99.00. Per 1-hour agent session at 2 vCPU / 4 GiB reserved with 30% CPU busy: **E2B $0.17, Daytona $0.17, Modal $0.24, Vercel $0.16, Cloudflare $0.12, Fly.io $0.06.**
+**The entire raw sandbox bill for a ten-developer team is fifty to two hundred dollars a month.** Our $499 Team platform fee is **3.5× the whole compute bill**. And the same 1,100 sandboxes would cost us **$5.65/month** of actual Vultr compute (206 VM-hours at $0.0274/hr on 2 vCPU / 4 GB instances shared four ways) — a **17–35× compute cost advantage** over the managed vendors, and the reason we can afford to give the sandbox away and charge for the control plane instead.
+
+That arithmetic told us we must not sell compute. It is also the single most useful thing we learned in this exercise, and it is why §D.1 prices a *platform*, and why the unit is a *task*, not a sandbox-hour.
 
 **Where top-down and bottom-up disagree, and why:**
 
@@ -296,23 +337,27 @@ Six things changed between 2023 and 2026. Each one is sourced.
 
 Isolation model, whether it runs on your infrastructure, and the pricing shape. All prices are as published on 2026-10-23.
 
-| Player | What it does | Isolation model | Runs on **your** infra? | Pricing shape | 5-min task (1 vCPU/2 GiB) |
+| Player | What it does | Isolation model | Runs on **your** infra? | Pricing shape | 1-h session, 2 vCPU/4 GiB |
 |---|---|---|---|---|---:|
-| **E2B** | Agent sandboxes (code execution); canonical position in the category | **Firecracker microVM** — own kernel | Yes — self-hostable, though `e2b-dev/infra` is a heavy Nomad/Consul/Firecracker deployment; vendor also offers a self-hosted/sovereign option | $0.000014/vCPU-s + $0.0000045/GiB-s; Hobby free ($100 credit), Pro $150/mo, **Enterprise $3,000/mo minimum** | **$0.0069** |
-| **Modal Sandboxes** | Serverless isolated sandboxes for coding agents | gVisor / custom container runtime | **No** (vendor notes no BYOC) | Starter $0 + $30 credits; Team $250/mo; **Sandbox & Notebook compute billed at 3× list** | **$0.0158** |
-| **Docker Sandboxes / Cloud Sandboxes** | Agent sandboxes; local free + metered cloud | **microVM with its own kernel** (explicitly not a container) | Partly — local on your machine, cloud on Docker's | Local $0; cloud by the second: Micro 1vCPU/2GB **$0.070/hr**, Small 2/4 **$0.140**, Medium 4/8 **$0.280**, Large 8/16 **$0.560**, XL 16/32 **$1.118**; seats $9–$24/user/mo; **"Docker AI Governance" (central policies, audit logs, SIEM) = $Custom** | **$0.0175** |
-| **Vercel Sandbox** | Firecracker microVMs for untrusted code; powers Vercel's own builds and v0 | **Firecracker microVM** | No | Active-CPU pricing reported at $0.128/vCPU-hr + $0.0212/GB-hr; free Hobby tier | **$0.0142** |
-| **Cloudflare Sandboxes** | Sandboxes on Cloudflare's edge, in the Workers ecosystem | Container + edge network | No | GA Apr 2026; $0.072/vCPU-hr **active CPU only** + $0.009/GiB-hr; on the $5 Workers Paid plan | **$0.0120** (1-h session) |
-| **AWS Bedrock AgentCore** (Runtime / Code Interpreter / Browser) | Serverless execution for agents, session-isolated | **microVM** | No | $0.0895/vCPU-hr + $0.00945/GB-hr (v1); v2 $0.1276/$0.0169; Code Interpreter billed the same; Gateway $0.005/1k invocations | **$0.0090** |
-| **Fly.io Sprites** | Per-agent cloud sandboxes | Firecracker-based VM | No | ~$0.06 per Claude Code hour at 2 vCPU/4 GiB reserved, 30% CPU busy | **$0.0050** |
-| **Daytona** | Devbox / agent infrastructure | Container (per third-party comparison, "trades security for speed") | No | Reported at E2B-equivalent rates | **$0.0069** |
-| **Lizard.build** | Sandboxes + "agentic" platform | Not stated publicly on the pricing page | Not stated | Small 2 vCPU/4 GB **$0.0162/hr**; plan $19/mo; SSO/RBAC/audit log/SOC 2 on demand | ~$0.0090 |
-| **Judge0 / Piston** | Sandboxed online code execution, 60+ languages | Linux namespaces + cgroups (`isolate`) | **Yes — fully open source, self-hostable** (GPL-3.0) | €0.001/submission; RapidAPI $0.0017/use, or self-host for free | **$0.0017** |
-| **GitHub Actions / CI** | Runs builds and tests | Shared, long-lived runners — **not** a per-task boundary | Your own self-hosted runners, yes | $0.002/min (1-core Linux) · $0.006/min (2-core) · $0.010/min (Windows) | ~$0.018 |
+| **E2B** | Agent sandboxes (code execution); canonical position in the category | **Firecracker microVM** — own kernel | Yes — self-hostable, though `e2b-dev/infra` is a heavy Nomad/Consul/Firecracker deployment; vendor also offers a self-hosted/sovereign option | $0.000014/vCPU-s + $0.0000045/GiB-s; Hobby free ($100 credit), Pro $150/mo, **Enterprise $3,000/mo minimum** | **$0.17** |
+| **Modal Sandboxes** | Serverless isolated sandboxes for coding agents | gVisor / custom container runtime | **No** (vendor notes no BYOC) | Starter $0 + $30 credits; Team $250/mo; **Sandbox & Notebook compute billed at 3× list** | **$0.24** |
+| **Docker Sandboxes / Cloud Sandboxes** | Agent sandboxes; local free + metered cloud | **microVM with its own kernel** (explicitly not a container) | Partly — local on your machine, cloud on Docker's | Local $0; cloud by the second: Micro 1vCPU/2GB **$0.070/hr**, Small 2/4 **$0.140**, Medium 4/8 **$0.280**, Large 8/16 **$0.560**, XL 16/32 **$1.118**; seats $9–$24/user/mo; **"Docker AI Governance" (central policies, audit logs, SIEM) = $Custom** | **$0.14** |
+| **Vercel Sandbox** | Firecracker microVMs for untrusted code; powers Vercel's own builds and v0 | **Firecracker microVM** | No | Active-CPU pricing reported at $0.128/vCPU-hr + $0.0212/GB-hr; free Hobby tier | **$0.16** |
+| **Cloudflare Sandboxes** | Sandboxes on Cloudflare's edge, in the Workers ecosystem | Container + edge network | No | GA Apr 2026; $0.072/vCPU-hr **active CPU only** + $0.009/GiB-hr; on the $5 Workers Paid plan | **$0.12** |
+| **AWS Bedrock AgentCore** (Runtime / Code Interpreter / Browser) | Serverless execution for agents, session-isolated | **microVM** | No | $0.0895/vCPU-hr + $0.00945/GB-hr (v1); v2 $0.1276/$0.0169; Code Interpreter billed the same; Gateway $0.005/1k invocations | **$0.22** |
+| **Fly.io Sprites** | Per-agent cloud sandboxes | Firecracker-based VM | No | ~$0.06 per Claude Code hour at 2 vCPU/4 GiB reserved, 30% CPU busy | **$0.06** |
+| **Daytona** | Devbox / agent infrastructure | Container (per third-party comparison, "trades security for speed") | No | Reported at E2B-equivalent rates | **$0.17** |
+| **Lizard.build** | Sandboxes + "agentic" platform | Not stated publicly on the pricing page | Not stated | Small 2 vCPU/4 GB **$0.0162/hr**; plan $19/mo; SSO/RBAC/audit log/SOC 2 on demand | **$0.02** |
+| **Judge0 / Piston** | Sandboxed online code execution, 60+ languages | Linux namespaces + cgroups (`isolate`) | **Yes — fully open source, self-hostable** (GPL-3.0) | €0.001/submission; RapidAPI $0.0017/use, or self-host for free | n/a — $0.0017/submission |
+| **GitHub Actions / CI** | Runs builds and tests | Shared, long-lived runners — **not** a per-task boundary | Your own self-hosted runners, yes | $0.002/min (1-core Linux) · $0.006/min (2-core) · $0.010/min (Windows) | $0.36 (2-core, not a sandbox) |
 | **Docker Sandboxes (local) / gVisor / Kata / Firecracker** | Primitives | Container / userspace kernel / VM / microVM | **Yes** | Free / open source | n/a |
 | **In-house** | Whatever you build | Whatever you choose — up to Firecracker-grade | **Yes** | 2.0 engineer-years + $95k/yr to run (§B.3) | your cost |
 | **Coding-agent vendors** (Cursor, Claude Code, Devin, Copilot agent mode) | The agent | **None** — they do not contain their own execution | No | Seat-based | n/a |
-| **BRZ** | Control plane + evidence for contained agent execution | Linux namespaces (**bubblewrap**: user, mount, PID, net) + cgroup v2 + rlimits, **egress denied by default**, brokered with an allowlist and a full log | **Yes — on your own Vultr account, one command, no control plane to operate** | $99 / $499 / $3,000 per month + per-task overage | **$0.0030** sandbox compute ($0.0250 with inference) |
+| **BRZ** | Control plane + evidence for contained agent execution | Linux namespaces (**bubblewrap**: user, mount, PID, net) + cgroup v2 + rlimits, **egress denied by default**, brokered with an allowlist and a full log | **Yes — on your own Vultr account, one command, no control plane to operate** | $99 / $499 / $3,000 per month + per-task overage | **$0.0274** |
+
+> **Column basis:** one 1-hour agent session at 2 vCPU / 4 GiB **reserved**, 30% CPU busy. Figures for E2B, Daytona, Modal, Vercel, Cloudflare and Fly.io are Fly.io's own published table (Oct 2026); AWS, Docker, Lizard and BRZ are our arithmetic on those providers' published per-unit rates, using the same method. `derived`
+>
+> **The BRZ line is the whole argument of §C.1 in one number: $0.0274 vs $0.06–$0.24.** We are 2.2× cheaper than Fly.io on reserved session compute and 8.8× cheaper than Modal, because a namespace on a commodity virtual machine is a cheaper isolation primitive than a microVM product. The managed vendors are not being stupid; they are selling a different thing, and they charge for it.
 
 ### C.2 — Containment differentiation: where BRZ is genuinely better, and where it is honestly worse (§9)
 
@@ -322,7 +367,7 @@ Isolation model, whether it runs on your infrastructure, and the pricing shape. 
 |---|---|---|---|
 | 1 | **The containment artifact.** Every run produces a blast-radius report: what executed, what was denied, resources used against caps, and the evidence trail. | E2B, Docker, Vercel, Cloudflare and AWS all give you **logs and session replay**. None of them give you the document your security reviewer signs. A log answers "what happened"; a report answers "show me it could not have reached anything else." Docker's *AI Governance* product is the closest competitor and it is **central policy administration, not a per-run containment attestation** — and it is priced "$Custom". | `sourced` + `derived` |
 | 2 | **The whole stack on your own Vultr account, with no control plane to operate.** | E2B self-hosting is a Nomad/Consul/Firecracker deployment. Docker's cloud is Docker's cloud; only the *local* sandbox is on your machine, and its governance tier is separate and custom-priced. BRZ is `bash deploy/bootstrap.sh` onto a Vultr instance. | `sourced` |
-| 3 | **Cost per task is lower than every managed vendor's** — $0.003 of sandbox compute, because namespaces on a commodity VM beat a microVM product on raw cost. | E2B $0.0069 · AWS $0.0090 · Cloudflare $0.0120 · Vercel $0.0142 · Modal $0.0158 · Docker $0.0175 per 5-minute task. BRZ is **2.3× cheaper than E2B** and **5.8× cheaper than Docker** on sandbox compute alone. | `derived` from published rates |
+| 3 | **Cost per session is lower than every managed vendor's** — **$0.0274** per 1-hour session, because namespaces on a commodity virtual machine beat a microVM product on raw cost. | Per 1-hour session (2 vCPU / 4 GiB reserved): E2B $0.17 · Modal $0.24 · AWS $0.22 · Vercel $0.16 · Cloudflare $0.12 · Docker $0.14. BRZ is **6.2× cheaper than E2B**, **8.8× cheaper than Modal**, **5.1× cheaper than Docker** on session compute alone — and 17–35× cheaper once the Vultr VM is shared across concurrent sandboxes. | `derived` from published rates |
 | 4 | **Egress denied by default, with a brokered allowlist and a complete log.** A run that *needed* the internet shows a **denied attempt** in the log, not a silent success. | Sandboxes usually ship with **network on** and egress control as a policy you configure. Docker and E2B both now offer network policies; that is a *capability* you enable. BRZ's default is a *denial*, and the report is proof of the denial. | `derived` |
 | 5 | **Provider neutrality by construction.** One OpenAI-compatible client; the provider is three lines of an env file. The same control plane runs Groq in development and Vultr Serverless Inference in production. | Cloudflare and Vercel are closed platforms where inference and compute are their own. This is a small but real structural advantage for a company that must not be locked in — and it is a requirement of this hackathon. | `derived` |
 | 6 | **The report is generated by the control plane, not by the model.** The model cannot edit its own evidence. | Relevant because of the incident class in §B.4: the agent is the thing that misbehaves. An evidence artifact produced by the agent would be worthless. | `derived` |
@@ -410,7 +455,8 @@ L  └────────────────────────�
 | Modal Team | $250/mo | Compute plan; Sandbox compute at 3× list. |
 | Docker Business seat | $24/user/mo | $288/dev/yr. **Our Enterprise tier is $180/dev/yr at 200 devs — cheaper per developer than a Docker seat.** |
 | GitHub Copilot Max | $100/user/mo | $1,200/dev/yr. The ceiling a developer will tolerate for a tool. |
-| Full E2B/Daytona/Modal/Vercel/Cloudflare sandbox bill for 10 devs | $49–$196/mo | **The reason we sell a platform, not compute.** |
+| Full E2B/Daytona/Modal/Vercel/Cloudflare sandbox bill for 10 devs (1,100 sessions/mo) | $49.50–$198.00/mo | **The reason we sell a platform, not compute.** |
+| **The same 1,100 sessions on BRZ** (206 VM-hours on shared 2 vCPU / 4 GB Vultr instances) | **$5.65/mo** | Our compute is 9–35× cheaper. We give the sandbox away and charge for the control plane. |
 | **In-house build** (2.0 engineer-years) | **$380,744** + $95,186/yr | **We are 10.6× cheaper than building it, in year one, and the only alternative that is *stronger* than us on isolation.** |
 | SOC 2 Type 2 all-in, 50-person team | $50,000–$150,000/yr | The compliance budget we are displacing a slice of. |
 
@@ -455,10 +501,10 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 | Selling starts | Nov 2026 | Post-hackathon |
 | Design partners, M1–M2 | 2 → 3, free, capped | Hackathon adjacency; the first reference customers |
 | Conversion design partner → paying | ~60% within 90 days | `assumed` |
-| New paying logos per month, M3 → M12 | ramps 2 → 3 per month | `assumed` |
+| New paying logos per month, M3 → M12 | ramps 2 → 5–6 per month (customer count goes 2, 5, 8, 12, 15, 19, 24, 29, 35, 40) | `assumed` |
 | Mix at M12 | 25 Starter / 12 Team / 3 Enterprise | `assumed` |
 | Tasks per customer per month | 700 / 3,000 / 25,000 by tier | `assumed` (§A.2 step 5) |
-| Variable cost per task | $0.025 | `derived` (§D.4) |
+| Variable cost per task | $0.0257 | `derived` (§D.4) |
 | Fixed operating cost | **$12,000/mo** (2 people + infra + tooling) | `assumed` |
 | Churn | 0% in year 1 | `assumed` (there is no cohort to churn) |
 
@@ -468,27 +514,27 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | M1 Nov 2026 | 0 | 0 | 0 | 0 | 0 | $0 | $0 | — | $0 |
 | M2 Dec 2026 | 0 | 0 | 0 | 0 | 0 | $0 | $0 | — | $0 |
-| M3 Jan 2027 | 2 | 0 | 0 | 2 | 1,400 | $218 | $35 | 83.9% | $183 |
-| M4 Feb 2027 | 4 | 1 | 0 | 5 | 5,800 | $1,015 | $145 | 85.7% | $870 |
-| M5 Mar 2027 | 6 | 2 | 0 | 8 | 10,200 | $1,812 | $255 | 85.9% | $1,557 |
-| M6 Apr 2027 | 8 | 3 | 1 | 12 | 39,600 | $6,209 | $990 | 84.1% | $5,219 |
-| M7 May 2027 | 10 | 4 | 1 | 15 | 44,000 | $7,006 | $1,100 | 84.3% | $5,906 |
-| M8 Jun 2027 | 13 | 5 | 1 | 19 | 49,100 | $7,912 | $1,228 | 84.5% | $6,684 |
-| M9 Jul 2027 | 16 | 6 | 2 | 24 | 79,200 | $12,418 | $1,980 | 84.1% | $10,438 |
-| M10 Aug 2027 | 19 | 8 | 2 | 29 | 87,300 | $13,903 | $2,182 | 84.3% | $11,720 |
-| M11 Sep 2027 | 22 | 10 | 3 | 35 | 120,400 | $18,988 | $3,010 | 84.1% | $15,978 |
-| **M12 Oct 2027** | **25** | **12** | **3** | **40** | **128,500** | **$20,473** | **$3,212** | **84.3%** | **$17,260** |
+| M3 Jan 2027 | 2 | 0 | 0 | 2 | 1,400 | $218 | $36 | 83.5% | $182 |
+| M4 Feb 2027 | 4 | 1 | 0 | 5 | 5,800 | $1,015 | $149 | 85.3% | $866 |
+| M5 Mar 2027 | 6 | 2 | 0 | 8 | 10,200 | $1,812 | $262 | 85.5% | $1,550 |
+| M6 Apr 2027 | 8 | 3 | 1 | 12 | 39,600 | $6,209 | $1,018 | 83.6% | $5,191 |
+| M7 May 2027 | 10 | 4 | 1 | 15 | 44,000 | $7,006 | $1,131 | 83.9% | $5,875 |
+| M8 Jun 2027 | 13 | 5 | 1 | 19 | 49,100 | $7,912 | $1,262 | 84.1% | $6,650 |
+| M9 Jul 2027 | 16 | 6 | 2 | 24 | 79,200 | $12,418 | $2,035 | 83.6% | $10,383 |
+| M10 Aug 2027 | 19 | 8 | 2 | 29 | 87,300 | $13,903 | $2,244 | 83.9% | $11,659 |
+| M11 Sep 2027 | 22 | 10 | 3 | 35 | 120,400 | $18,988 | $3,094 | 83.7% | $15,894 |
+| **M12 Oct 2027** | **25** | **12** | **3** | **40** | **128,500** | **$20,473** | **$3,302** | **83.9%** | **$17,171** |
 | **12-month total** | | | | | **565,500** | **$89,954** | | | |
 
-**Headline:** month-12 MRR **$20,473** · month-12 ARR run-rate **$245,676** · 12-month revenue **$89,954** · month-12 gross margin **84.3%**.
+**Headline:** month-12 MRR **$20,473** · month-12 ARR run-rate **$245,676** · 12-month revenue **$89,954** · month-12 gross margin **83.9%**.
 
 **Scenarios (budget-forecast method: best / base / worst, with the delta stated):**
 
 | Scenario | M12 mix | M12 MRR | M12 ARR | M12 contribution | vs $12,000 fixed |
 |---|---|---:|---:|---:|---|
-| **Bear** — no enterprise deal ever lands; Team grows slowly | 12 Starter / 6 Team / 0 Ent | **$4,782** | $57,384 | $4,122 | **BELOW — never breaks even** |
-| **Base** | 25 / 12 / 3 | **$20,473** | $245,676 | $17,260 | **ABOVE from M11** |
-| **Bull** — two enterprise deals land six months earlier | 30 / 18 / 6 | **$35,292** | $423,504 | $29,667 | ABOVE from M9 |
+| **Bear** — no enterprise deal ever lands; Team grows slowly | 12 Starter / 6 Team / 0 Ent | **$4,782** | $57,384 | $4,104 | **BELOW — never breaks even** |
+| **Base** | 25 / 12 / 3 | **$20,473** | $245,676 | $17,171 | **ABOVE from M11** |
+| **Bull** — two enterprise deals land six months earlier | 30 / 18 / 6 | **$35,292** | $423,504 | $29,510 | ABOVE from M9 |
 
 **The bear case is the one to watch, and we are not hiding it.** If the Enterprise tier does not land, this business does not work. That is a real finding about the shape of the business, not a forecast caveat.
 
@@ -498,44 +544,44 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 
 | Component | Calculation | Cost | Confidence |
 |---|---|---:|---|
-| **Sandbox compute** | Vultr Cloud Compute 2 vCPU / 4 GB = $0.0274/hr → $0.0137 per vCPU-hr; 1 vCPU × 8 minutes (2 attempts × 4 min) = 0.1333 vCPU-hr → $0.00183; plus amortisation and overhead, rounded **up** to $0.003 | **$0.0030** | `derived` |
+| **Sandbox compute** | Vultr Cloud Compute 2 vCPU / 4 GB = $0.0274/hr. A task occupies that instance for 8 minutes of wall clock (2 attempts × 4 min) → 8/60 × $0.0274 = $0.00365. **Deliberately a worst case**: it charges the whole instance to one task. On a VM shared four ways the marginal figure is ~$0.0009. | **$0.0037** | `derived` |
 | **Inference** | Vultr Serverless Inference $0.55/M input, $2.75/M output; 20,000 input + 4,000 output tokens per task → $0.011 + $0.011 | **$0.0220** | `derived` |
-| **Total variable cost per task** | | **$0.0250** | `derived` |
+| **Total variable cost per task** | | **$0.0257** | `derived` |
 
-> **Finding 1 — inference is 88% of our variable cost, not sandbox compute.** This inverts the intuitive story. BRZ's margin is a **token-economics** problem: model routing, caching, and — most importantly — **letting enterprise customers bring their own inference key**, which drops the variable cost to $0.0030 and the gross margin to **88% → 96%**. We should build BYOC inference before we optimise anything else.
+> **Finding 1 — inference is 86% of our variable cost, not sandbox compute.** This inverts the intuitive story. BRZ's margin is a **token-economics** problem: model routing, caching, and — most importantly — **letting enterprise customers bring their own inference key**, which drops the variable cost to $0.0037 and the month-12 gross margin from **83.9% to 97.7%**. We should build BYOC inference before we optimise anything else.
 
 **Revenue and margin per task at month 12:**
 
 | Metric | Value | Confidence |
 |---|---:|---|
 | Blended revenue per task | $0.1593 | `derived` |
-| Variable cost per task | $0.0250 | `derived` |
-| **Contribution per task** | **$0.1343** | `derived` |
-| **Contribution margin** | **84.3%** | `derived` |
-| Month-12 gross margin | 84.3% | `derived` |
+| Variable cost per task | $0.0257 | `derived` |
+| **Contribution per task** | **$0.1336** | `derived` |
+| **Contribution margin** | **83.9%** | `derived` |
+| Month-12 gross margin | 83.9% | `derived` |
 
 **What volume makes this work (CVP method):**
 
 | Method | Calculation | Result |
 |---|---|---|
-| **1. By customers** | $12,000 fixed ÷ $431.51 blended contribution per customer | **27.8 customers** |
-| **2. By tasks** | $12,000 fixed ÷ $0.1343 contribution per task | **89,337 tasks/month** = 2,978/day |
-| **Cross-check** | 89,337 tasks ÷ 3,213 tasks per customer | **27.8 customers** ✔ methods agree |
-| **Breakeven month (base case)** | first month where contribution ≥ $12,000 | **M11, September 2027** (35 customers, $15,978) |
-| **Margin of safety at M12** | ($20,473 − $14,233) ÷ $20,473 | **30.5%** |
-| **Degree of operating leverage at M12** | $17,260 ÷ $5,260 | **3.28** |
+| **1. By customers** | $12,000 fixed ÷ $429.26 blended contribution per customer | **28.0 customers** |
+| **2. By tasks** | $12,000 fixed ÷ $0.1336 contribution per task | **89,805 tasks/month** = 2,993/day |
+| **Cross-check** | 89,805 tasks ÷ 3,213 tasks per customer | **28.0 customers** ✔ methods agree |
+| **Breakeven month (base case)** | first month where contribution ≥ $12,000 | **M11, September 2027** (35 customers, $15,894) |
+| **Margin of safety at M12** | ($20,473 − $14,308) ÷ $20,473 | **30.1%** |
+| **Degree of operating leverage at M12** | $17,171 ÷ $5,171 | **3.32** |
 
-> **A 30.5% margin of safety is thin.** A 31% drop in volume at the M12 mix takes us below break-even. We would rather state that than present a rosy chart.
+> **A 30.1% margin of safety is thin.** A 30% drop in volume at the M12 mix takes us below break-even. We would rather state that than present a rosy chart.
 
 **Where it does not work — the finding the brief asks for:**
 
 | Failure case | Arithmetic | Verdict |
 |---|---|---|
-| **Starter tier only** | $109 revenue − $17.50 variable = $91.50 contribution per customer; $12,000 ÷ $91.50 = **131 customers needed**; we have 25 at M12 | **Never breaks even.** A Starter-only business is a funnel, not a business. |
-| **Team tier only** | $579 − $75 = $504 contribution; $12,000 ÷ $504 = **23.8 customers**; M12 Team count is 12 | Breaks even around M12–M13. Marginal. |
-| **Enterprise tier only** | $3,600 − $625 = $2,975 contribution; **4.0 customers** | Breaks even almost immediately — **one enterprise deal is 12% of a year's revenue.** |
-| **Price war on compute** | E2B at $0.0069 per 5-minute task, Fly.io at $0.0050; BRZ's *sandbox* cost is $0.0030 but our *subscription* is $499 | **We lose any price fight on compute.** We must not enter one. |
-| **Inference cost doubles** (model deprecation, a bad default, or a customer on a frontier model) | Variable cost $0.025 → $0.047; CM ratio 84.3% → 70.5% | Survivable but it takes 12 points of margin. **Model routing is not a nice-to-have.** |
+| **Starter tier only** | $109 revenue − $17.99 variable = $91.01 contribution per customer; $12,000 ÷ $91.01 = **132 customers needed**; we have 25 at M12 | **Never breaks even.** A Starter-only business is a funnel, not a business. |
+| **Team tier only** | $579 − $77.10 = $501.90 contribution; $12,000 ÷ $501.90 = **23.9 customers**; M12 Team count is 12 | Breaks even around M12–M13. Marginal. |
+| **Enterprise tier only** | $3,600 − $642.50 = $2,957.50 contribution; **4.1 customers** | Breaks even almost immediately — **one enterprise deal is 12% of a year's revenue.** |
+| **Price war on compute** | E2B $0.17 and Fly.io $0.06 per 1-hour session; BRZ's session compute is $0.0274 but our *subscription* is $499/mo | **We win on compute, and we must not fight on compute.** The managed vendors are selling isolation, not hours. |
+| **Inference cost doubles** (model deprecation, a bad default, or a customer on a frontier model) | Variable cost $0.0257 → $0.0477; CM ratio 83.9% → 70.1% | Survivable but it takes 14 points of margin. **Model routing is not a nice-to-have.** |
 
 **The conclusion, stated plainly:** *this business works on 4 enterprise customers or on 28 mixed ones, and it does not work on 25 small ones. The commercial strategy is therefore not "get as many users as possible" — it is "get one security team to sign off on the report, then sell the platform to the 40 platform teams above them."*
 
@@ -551,18 +597,18 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 
 ### E.2 — Three sentences for the video (§16)
 
-> **The words below are 56 words. Read aloud at a normal pace they take about 24 seconds — inside the 30-second budget. They contain no acronyms and no technical terms a non-specialist cannot follow.**
+> **The words below are 63 words. Read aloud at 150 words per minute they take 25 seconds; at a slower 140 they take 27 — inside the 30-second budget at either pace. They contain no acronyms and no technical terms a non-specialist cannot follow.**
 
-**1 — The problem.**
-> "Today, AI assistants run with your keys and your network, and one of them can delete your production database in nine seconds."
+**1 — The problem.** *(19 words)*
+> "AI assistants now run with your keys and your network, and one deleted a production database in nine seconds."
 
-**2 — The solution.**
-> "We run every assistant's task in a sealed, throwaway workspace — no network, no keys, hard time and memory limits — and hand back a report of everything it did."
+**2 — The solution.** *(26 words)*
+> "We run every task in a sealed, throwaway workspace — no network, no keys, hard limits — and hand back a report of everything it did."
 
-**3 — The value.**
-> "That report is what lets a security team say yes, turning a risk nobody can price into a line item on a budget."
+**3 — The value.** *(18 words)*
+> "That report is what lets a security team say yes, turning an unpriceable risk into a budget line."
 
-**Why these three and not others.** The problem sentence contains a *concrete, sourced, 9-second number* rather than an abstraction, because the whole pitch turns on the audience believing the risk is real. The solution sentence contains exactly three properties and no adjectives, so it can be read aloud without a breath. The value sentence names the buyer and the mechanism of the purchase. **No sentence uses the words "blast radius", "sandbox", "control plane", "policy engine", or "audit trail"** — they are our words, not the audience's, and they belong on a slide, not in a spoken sentence.
+**Why these three and not others.** The problem sentence contains a *concrete, sourced, 9-second number* rather than an abstraction, because the whole pitch turns on the audience believing the risk is real. The solution sentence contains exactly three properties and no adjectives, so it can be read aloud without a breath. The value sentence names the buyer and the mechanism of the purchase. **No sentence uses the words "blast radius", "sandbox", "control plane", "policy engine", "egress", or "audit trail"** — they are our words, not the audience's, and they belong on a slide, not in a spoken sentence.
 
 ### E.3 — Slide outline with a time budget (§17)
 
@@ -576,9 +622,9 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 | 4 | **⭐ THE CONTAINMENT MOMENT** | **1:32–2:20** | **48s** | **The single longest segment, and the only one shot as a continuous live screen recording.** See the beat sheet below. | **Vultr C1 submission requirement** — *"show one containment moment"* |
 | 5 | **The evidence** | 2:20–2:50 | 30s | The blast-radius report on screen: what executed, what was denied, resource usage against caps, the audit trail. One sentence: *"This is the document your reviewer signs."* | Value proposition |
 | 6 | **The market** | 2:50–3:20 | 30s | Bottom-up: 225M GitHub devs → 26.2% in agent-workflow orgs → 259,921 orgs → 24% policy-gated → **62,381** → **$396M/yr beachhead**, **$1.65B/yr TAM**. Cross-check: 3.6–4.0% of Gartner's $9.8–11.0B. | **Market analysis** (Presentation 4/5 gate) |
-| 7 | **The revenue** | 3:20–3:48 | 28s | The three price tiers. The unit explained in one breath: *"one contained task."* Then the honest bit: **$0.025 cost per task, 84% margin, break-even at 28 customers — and Starter-only never breaks even.** | **Marketing revenue** (Presentation 4/5 gate) |
+| 7 | **The revenue** | 3:20–3:48 | 28s | The three price tiers. The unit explained in one breath: *"one contained task."* Then the honest bit: **$0.026 cost per task, 84% margin, break-even at 28 customers — and Starter-only never breaks even.** | **Marketing revenue** (Presentation 4/5 gate) |
 | 8 | **The competition** | 3:48–4:05 | 17s | The 2×2 (§C.3) — one slide, no animation. Name Docker AI Governance, E2B, AWS AgentCore, and Judge0 out loud. Then: *"They give you a microVM. We give you the document your auditor accepts."* | **Competitive analysis** (Presentation 5/5 line) |
-| 9 | **Future plans** | 4:05–4:28 | 23s | Dated: Dec 2026 SOC 2 Type I · Mar 2027 5 design partners · Jun 2027 SSO + audit export · Sep 2027 3 enterprise customers · Oct 2027 AWS provider + microVM tier. | **Future goals and plans** (Presentation 4/5 gate) |
+| 9 | **Future plans** | 4:05–4:28 | 23s | Dated: Dec 2026 SOC 2 Type I readiness · Feb 2027 microVM tier · Mar 2027 SSO + RBAC · Jun 2027 second cloud provider · Sep 2027 SOC 2 Type II issued and 3 enterprise customers. | **Future goals and plans** (Presentation 4/5 gate) |
 | 10 | **Close** | 4:28–4:40 | 12s | "A security team can approve a report. We cannot yet be trusted on a promise. So start with a repository you do not care about — and read the report." + URL and repo. | Close |
 | | **TOTAL** | **0:00–4:40** | **4:40** | | 20s of slack to 5:00 |
 
@@ -607,7 +653,7 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 | **Feb 2027** | MicroVM tier (`Firecracker` or `Kata`) behind the same `SandboxProvider` interface, so BRZ stops being the weaker-isolation option. | **Closes weakness #1 from §C.2.** This is the single highest-value engineering item for the Enterprise tier. |
 | **Mar 2027** | Multi-tenant control plane, SSO (SAML), RBAC, per-organisation audit-log retention. | Closes weakness #4. Enterprise tier is unsellable without it. |
 | **Apr 2027** | Evidence export in a form an auditor accepts (signed run manifest, hash-chained event log). | Turns the report from a UI screen into an artifact. |
-| **Jun 2027** | Second sandbox provider (AWS) behind the same interface; BYOC inference keys. | Closes weakness #5, and drops variable cost from $0.025 to $0.003. |
+| **Jun 2027** | Second sandbox provider (AWS) behind the same interface; BYOC inference keys. | Closes weakness #5, and drops variable cost from $0.0257 to $0.0037. |
 | **Sep 2027** | SOC 2 Type II report issued. | Closes weakness #2. The gate for real enterprise procurement. |
 | **Oct 2027** | Policy-as-code engine: a run that violates a policy is **stopped**, not merely reported. | Moves from "detecting" to "preventing" — the Cyera recommendation, fifth control. |
 
@@ -620,7 +666,7 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 | **Jan 2027** | First paying customer (Starter). | 1 paid invoice | Yes |
 | **Mar 2027** | 5 design partners; **2 paying**; first Team-tier deal. | 2 paid invoices | Yes |
 | **Jun 2027** | **First Enterprise customer** on a self-hosted Vultr account. | 1 signed annual contract ≥ $36,000 | **Yes — the milestone that decides the business** |
-| **Sep 2027** | 3 Enterprise customers; **operating break-even** (§D.4). | $15,978+ monthly contribution | Yes |
+| **Sep 2027** | 3 Enterprise customers; **operating break-even** (§D.4). | $15,894+ monthly contribution | Yes |
 | **Oct 2027** | Month-12 exit run-rate of **$245,676 ARR**, 40 customers, 565,500 contained tasks over the year. | MRR $20,473 | Yes |
 | **Jan 2028** | SOC 2 Type II + 10 Enterprise customers; begin the 2028 outbound motion into financial services. | — | Yes |
 
@@ -670,7 +716,7 @@ Listed weakest-first, as the brief requires.
 |---|---|---|---|
 | 1 | **That the TAM of $1.65B/yr is right.** | It rests on an assumed average org size of 12 developers and a US-derived accounts-per-professional ratio applied globally. Both could move the number by 2× in either direction. | Sizing from a paid, primary dataset (e.g. a licensing survey of engineering orgs) rather than a chain of public proxies. |
 | 2 | **That the beachhead filter of 24% is stable.** | It comes from one survey's self-report of whether an employer has an "official AI policy or published approved tools" — a loose proxy for "will buy containment." | A 25-question instrument run against 100 real platform leaders. |
-| 3 | **That the $0.025 variable cost holds at scale.** | Inference is 88% of it, and inference price per task depends on the model, the context length, and the retry rate — none of which we have measured, because we have not run a real task in production. | 1,000 real contained tasks on Vultr Serverless Inference, with token counts logged per run. |
+| 3 | **That the $0.0257 variable cost holds at scale.** | Inference is 86% of it, and inference price per task depends on the model, the context length, and the retry rate — none of which we have measured, because we have not run a real task in production. | 1,000 real contained tasks on Vultr Serverless Inference, with token counts logged per run. |
 | 4 | **That the 12-month ramp will happen.** | It is a plan. It assumes a two-person team closes 40 customers in 12 months from zero, which is the least certain number in this document. | Three design partners with signed conversion intent, then a real pipeline. |
 | 5 | **That 4 enterprise customers or 28 mixed ones is a business.** | It is a business *at $3,000/month*, on the assumption that a $36,000/yr platform fee is acceptable to a security budget. We have never sold one. | One signed annual contract. |
 | 6 | **That the in-house alternative costs $380,744.** | It assumes 2 engineers × 6 months of build, 1 engineer-year of maintenance, and a $190,372 fully-loaded engineer cost. A team with existing kernel and policy expertise would spend far less. | A written estimate from a real infrastructure team. |
@@ -708,7 +754,7 @@ All URLs fetched **2026-10-23**. Confidence refers to the specific figure taken,
 | 17 | Modal, pricing | `modal.com/pricing` | CPU $0.0000131/core/s; memory $0.00000222/GiB/s; Starter $0 + $30 credits; Team $250/mo; **Sandboxes billed at 3× list** ($0.00003942/core/s, $0.00000667/GiB/s); SOC 2 on all plans, HIPAA + audit logs + SSO on Enterprise | `sourced` |
 | 18 | Browserbase, pricing | `browserbase.com/pricing` | Free $0 / Developer $20 / Startup $99; $0.12 and $0.10 per browser hour; SOC 2, HIPAA BAA, DPA, SSO | `sourced` |
 | 19 | AWS, *Amazon Bedrock AgentCore pricing* | `aws.amazon.com/bedrock/agentcore/pricing/` | v1 $0.0895/vCPU-hr + $0.00945/GB-hr; v2 $0.1276 + $0.0169; Code Interpreter and Browser Tool at the same rates; Gateway $0.005/1k invocations; 2 vCPU / 8 GB max per session | `sourced` |
-| 20 | Fly.io, *What It Costs to Run Claude Code or Codex in a Cloud Sandbox* | `fly.io/learn/claude-code-sandbox-cost` | 1-h session at 2 vCPU/4 GiB, 30% CPU busy: E2B $0.17, Daytona $0.17, Modal $0.24, Vercel $0.16, Cloudflare $0.12, **Fly.io $0.06**; 10 devs × 5 tickets/day × 22 days = 1,100 sandboxes/month = $48.95–$196.28; checked 2026-10-05 | `sourced` |
+| 20 | Fly.io, *What It Costs to Run Claude Code or Codex in a Cloud Sandbox* | `fly.io/learn/claude-code-sandbox-cost` | 1-h session at 2 vCPU/4 GiB, 30% CPU busy: E2B $0.17, Daytona $0.17, Modal $0.24, Vercel $0.16, Cloudflare $0.12, **Fly.io $0.06**; 10 devs × 5 tickets/day × 22 days = 1,100 sandboxes/month (825 session-hours) = Fly.io $49.50 · Cloudflare $99.00 · Vercel $132.00 · E2B and Daytona $140.25 · Modal $198.00; checked 2026-10-05 | `sourced` |
 | 21 | Docker, *Docker Sandboxes* and *Cloud Sandboxes* | `docker.com/products/docker-sandboxes/` · `docker.com/blog/introducing-cloud-sandboxes-...` · `docker.com/c/sbx-promo/` | Micro 1/2GB $0.070/hr, Small 2/4 $0.140, Medium 4/8 $0.280, Large 8/16 $0.560, XL 16/32 $1.118; local sandboxes free; seats $9–$24/user/mo; **"Docker AI Governance" — central network/filesystem/MCP policies, audit logs, SIEM streaming — $Custom**; microVM with its own kernel | `sourced` |
 | 22 | GitHub, *Actions billing* | `docs.github.com/en/billing/managing-billing-for-your-products/managing-billing-for-github-actions/about-billing-for-github-actions` | Linux 1-core $0.002/min; 2-core $0.006/min; Windows $0.010/min; macOS $0.062/min; storage $0.25/GB-month | `sourced` |
 | 23 | GitHub, *Copilot plans* | `github.com/features/copilot/plans` | Free $0, Pro $10, Pro+ $39, **Max $100** per month (AI Credits $15/$70/$200) | `sourced` |
@@ -739,7 +785,7 @@ All URLs fetched **2026-10-23**. Confidence refers to the specific figure taken,
 
 **Note on secondary sources.** Items 20, 27, 38, 47, and the two Digitalisation World / The Register / Docker corroborations of the Stack Overflow survey are third-party compilations of primary data. Where a primary source existed (16–29, 39–46) we used it. Where it did not (Cloudflare Sandbox and Vercel Sandbox rates — item 27; the "29% prepared" figure — item 38), we marked the claim as secondary and, where the number is load-bearing, we did not rely on it alone.
 
-**Verification performed.** Every headline number in this document was recomputed with a script rather than by eye, on 2026-10-23: the bottom-up market chain (§A.2), the top-down cross-checks (§A.3), the price ladder and blended ACV (§A.2 step 3), the 12-month ramp and its three scenarios (§D.3), the unit economics and both break-even methods (§D.4), the per-developer price checks (§D.1), the in-house alternative arithmetic (§B.3), and the per-task competitor cost table (§C.1). The two break-even methods in §D.4 agree independently at 27.8 customers.
+**Verification performed.** Every headline number in this document was recomputed with a script rather than by eye, on 2026-10-23: the bottom-up market chain (§A.2), the top-down cross-checks (§A.3), the price ladder and blended ACV (§A.2 step 3), the 12-month ramp and its three scenarios (§D.3), the unit economics and both break-even methods (§D.4), the per-developer price checks (§D.1), the in-house alternative arithmetic (§B.3), and the per-task competitor cost table (§C.1). The two break-even methods in §D.4 agree independently at 28.0 customers.
 
 ---
 

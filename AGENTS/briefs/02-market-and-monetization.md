@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 02 — Market, buyer, and monetization for containment-first agent execution
 

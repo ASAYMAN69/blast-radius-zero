@@ -40,6 +40,19 @@ Those two subtrees belong to brief 06. You may **read** them and you may **impor
 > what differs (`module`, `moduleResolution`, `lib`, `types`, `outDir`, `include`). One lockfile, one
 > `node_modules`, one `npm install` at the root. Full details: `docs/MONOREPO.md`.
 
+> **MANIFEST + TSCONFIG UPDATE (from HEAD, after wave 1):** the workspace manifests and the
+> workspace `tsconfig.json` files are **now written and installed** — `backend/package.json`,
+> `frontend/package.json`, `backend/tsconfig.json`, `frontend/tsconfig.json`,
+> `frontend/tsconfig.node.json`, the root `package-lock.json`, and the root `.npmrc`. One
+> `npm install` at the root has been run; `node_modules/` is populated. **Do not create or edit any
+> manifest, any lockfile, or the root `tsconfig.base.json`.** You may edit **your own** workspace
+> `tsconfig.json` if you need to, but not the root base.
+>
+> Two things to know: (1) the `extends` path is `../tsconfig.base.json` — the design doc's `../../`
+> assumed `packages/backend` and is wrong for our layout (verified: `TS5083` with `../../`).
+> (2) The backend's `build` script is `tsc --noEmit` — there is no emit step, by design (§10.4).
+> Run `npm run typecheck --workspace backend` (or `--workspace frontend`) to check your work.
+
 ## Shared / serialized files
 - `backend/package.json` → **the HEAD's file, written between wave 1 and wave 2** with the dependency list from the design doc, and installed at the workspace root. **Do not create or edit it.**
 - root `package-lock.json` → **the HEAD's file.** One lockfile for the whole workspace. Never create a lockfile inside a package, never run `npm install` inside a package.

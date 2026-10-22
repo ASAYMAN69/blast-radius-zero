@@ -1,0 +1,27 @@
+{
+  "name": "@brz/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "BRZ control plane — inference client, sandbox providers, capability broker, run store, blast-radius reports.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=../.env --watch src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit",
+    "test": "node --test",
+    "lint": "tsc --noEmit",
+    "start": "node --env-file=../.env src/server.ts",
+    "migrate": "node --env-file=../.env src/db/migrate.ts",
+    "demo": "node --env-file=../.env src/demo/run-demo.ts",
+    "demo:offline": "BRZ_INFERENCE_MODE=mock node --env-file=../.env src/demo/run-demo.ts"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "~5.9.3"
+  }
+}

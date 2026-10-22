@@ -48,6 +48,15 @@ All configuration is env. **No host, port, key, model, or URL in source.** `.env
 | `PORT` | control-plane port |
 | `NODE_ENV` | mode |
 
+## Wave 1 → 2 handoff (already done)
+
+The workspace manifests, the three workspace `tsconfig.json` files, the root `package-lock.json`, and the root `.npmrc` are **written and installed**. `npm install` at the root has run; `node_modules/` is populated. Workers write **source only**.
+
+- `npm run typecheck --workspace backend` · `npm run typecheck --workspace frontend`
+- The `extends` path is `../tsconfig.base.json` (the design doc's `../../` assumed `packages/backend` and fails with `TS5083`).
+- The backend has **no emit step** — `build` is `tsc --noEmit`, by design. The backend ships as source.
+- The backend `test` script is `node --test` (Node 24 discovers `*.test.ts`).
+
 ## Non-negotiables
 
 1. **Credentials never enter the sandbox.** The control plane holds every key. The sandbox gets scoped capabilities from the broker.

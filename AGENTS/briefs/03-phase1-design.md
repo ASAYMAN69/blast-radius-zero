@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 03 — Phase 1 system design and frozen contracts
 
