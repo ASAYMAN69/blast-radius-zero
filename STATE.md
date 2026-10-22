@@ -195,24 +195,26 @@ brz/
 
 ## 8. Next actions
 
-**Wave 1 is ready to dispatch.** Two briefs, different agents, disjoint scopes.
+**Wave 1 is DONE** — ARCHITECT (design, 2,900 lines) and BUSINESS (market, 793 lines) both delivered. The workload is now decided by ARCHITECT: **`self-healing-runner`** (named direction #5), chosen because the answer is in the error message — `AssertionError: 10 != 15` — so a thin agent's job is one comparison and one edit.
+
+**Wave 2 is dispatched.** BACKEND and FRONTEND in parallel, against the frozen contracts.
 
 ```
-INVOKE: ARCHITECT
-Read AGENTS/CONTEXT.md and AGENTS/briefs/03-phase1-design.md, then start working.
+INVOKE: BACKEND
+Read AGENTS/CONTEXT.md and AGENTS/briefs/04-backend-core.md, then start working.
 
-INVOKE: BUSINESS
-Read AGENTS/CONTEXT.md and AGENTS/briefs/02-market-and-monetization.md, then start working.
+INVOKE: FRONTEND
+Read AGENTS/CONTEXT.md and AGENTS/briefs/05-frontend-phase1.md, then start working.
 ```
 
-(BUSINESS is off the critical path — dispatch it if you want it moving, but wave 1 does not wait for it. If you only want one agent running, dispatch ARCHITECT.)
+Both are first launches for their agents, so both prompts point at `AGENTS/CONTEXT.md`.
 
 **The plan, in order**
 
 | Wave | Brief | Agent | What it produces | Gate to the next wave |
 |---|---|---|---|---|
-| 1 | `03-phase1-design.md` | ARCHITECT | The frozen contracts: provider interface, API, schema, report shape, file layout, demo scenario | Coordinator accepts the design |
-| 1 | `02-market-and-monetization.md` | BUSINESS | Market, buyer, pricing, pitch narrative | — (parallel) |
+| 1 | `03-phase1-design.md` | ARCHITECT | The frozen contracts: provider interface, API, schema, report shape, file layout, demo scenario. **DONE** | accepted |
+| 1 | `02-market-and-monetization.md` | BUSINESS | Market, buyer, pricing, pitch narrative. **DONE** | — (parallel) |
 | 2 | `04-backend-core.md` | BACKEND | Control plane: server, config, inference client, agent loop, store, routes | A real task runs end to end |
 | 2 | `05-frontend-phase1.md` | FRONTEND | The operator console with the blast-radius report panel | The console is usable in fixture mode |
 | 3 | `06-backend-containment.md` | BACKEND | Sealed sandbox, broker, egress allowlist, real report, `deploy/bootstrap.sh` | The containment claims are mechanically proven |
