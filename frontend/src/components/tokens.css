@@ -1,0 +1,86 @@
+/**
+ * BRZ console — the token set.
+ *
+ * A small, deliberate set of spacing steps, type sizes, and colours. Not a
+ * design system: just enough shared vocabulary that every panel reads as the
+ * same tool. A DESIGNER pass can retune this file without touching a
+ * component.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* ── spacing ─────────────────────────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 56px;
+
+  /* ── type ────────────────────────────────────────────────────────────── */
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* ── colour ──────────────────────────────────────────────────────────── */
+  --bg: #f1f3f6;
+  --surface: #ffffff;
+  --surface-2: #f8f9fb;
+  --surface-3: #eaeef3;
+  --border: #dce1e8;
+  --border-strong: #c3cad4;
+
+  --ink: #0e1319;
+  --ink-2: #37414d;
+  --ink-3: #66717f;
+
+  --accent: #1e4fd6;
+  --accent-hover: #1a43b4;
+  --accent-soft: #e9effd;
+  --accent-ink: #ffffff;
+
+  --good: #0b6b45;
+  --good-soft: #e1f3ea;
+  --good-line: #b6dfcb;
+
+  --warn: #8a5200;
+  --warn-soft: #fbeed7;
+  --warn-line: #e9cf9d;
+
+  --bad: #a5231b;
+  --bad-soft: #fbe6e4;
+  --bad-line: #eec2bd;
+
+  --neutral: #49535f;
+  --neutral-soft: #e9edf2;
+
+  --focus: var(--accent);
+
+  /* ── shape ───────────────────────────────────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-md: 7px;
+  --radius-lg: 12px;
+
+  --shadow-1: 0 1px 2px rgba(14, 19, 25, 0.06);
+  --shadow-2: 0 8px 24px rgba(14, 19, 25, 0.1);
+
+  /* ── interaction ─────────────────────────────────────────────────────── */
+  --tap: 44px;
+  --duration: 140ms;
+}

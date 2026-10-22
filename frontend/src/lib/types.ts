@@ -15,19 +15,61 @@
  * particular makes "not measured" impossible to write as `0`.
  */
 
-// ── sandbox (the subset the report and the API reference) ────────────────────
+// ── sandbox (the seam the control plane is built on) ────────────────────────
 
 /** Opaque, externally-visible identifier for one sandbox instance. */
 export type SandboxId = string;
 
-/** Which tier backs a sandbox. Nothing above the interface may branch on this. */
-export type SandboxProviderKind = 'bwrap' | 'vultr-vm';
+/**
+ * Which tier backs a sandbox. Nothing above the interface may branch on this.
+ *
+ * DEVIATION, mirrored from the backend (brief 04): the union carries a third
+ * member, `'standin'`. The design doc requires a stand-in provider to exist
+ * (§10.2) and requires its report to be `incomplete` (§14, decision 39), but
+ * the frozen union had no label for it. Labelling the stand-in `'bwrap'` would
+ * be a false claim about which tier ran, in a product whose value is truthful
+ * reports. Brief 06 removes the stand-in and the member can be deleted.
+ */
+export type SandboxProviderKind = 'bwrap' | 'vultr-vm' | 'standin';
 
 /**
  * How the caps were actually enforced. Recorded verbatim in the report so a
  * reader can tell "the cap was reached" from "the cap was never applied".
  */
 export type ResourceEnforcementMode = 'cgroup+rlimit' | 'rlimit-only' | 'provider-native';
+
+/**
+ * Hard caps applied to every sandboxed execution.
+ *
+ * These are *limits*, not targets. The provider must enforce every one of them
+ * by a real mechanism and must report which mechanism was used. A limit that
+ * is not enforced must not be reported as enforced.
+ */
+export interface SandboxLimits {
+  readonly wallClockMs: number;
+  readonly memoryBytes: number;
+  readonly cpuSeconds: number;
+  readonly maxProcesses: number;
+  readonly maxFileBytes: number;
+  readonly maxOutputBytes: number;
+  readonly maxOpenFiles: number;
+}
+
+/** A file the control plane writes into the sandbox before the agent starts. */
+export interface SandboxFile {
+  readonly path: string;
+  readonly content: string;
+  readonly mode?: number;
+}
+
+/** A command to run inside the sandbox. */
+export interface SandboxCommand {
+  readonly argv: readonly string[];
+  readonly cwd?: string;
+  readonly timeoutMs?: number;
+  readonly env?: Readonly<Record<string, string>>;
+  readonly stdin?: string;
+}
 
 /** Why a sandboxed process died, if it did. */
 export type SandboxKillReason =
@@ -40,16 +82,79 @@ export type SandboxKillReason =
   | 'sandbox-destroyed'
   | 'provider-error';
 
-export type SandboxErrorCode =
-  | 'sandbox_create_failed'
-  | 'sandbox_not_found'
-  | 'sandbox_destroy_failed'
-  | 'invalid_path'
-  | 'invalid_command'
-  | 'command_not_allowed'
-  | 'cgroup_unavailable'
-  | 'provider_unavailable'
-  | 'provider_error';
+/** The outcome of one sandboxed command. */
+export interface SandboxExecResult {
+  readonly exitCode: number | null;
+  readonly signal: string | null;
+  readonly stdout: string;
+  readonly stderr: string;
+  readonly truncated: boolean;
+  readonly durationMs: number;
+  readonly timedOut: boolean;
+  readonly killReason: SandboxKillReason | null;
+}
+
+/** The result of tearing a sandbox down. */
+export interface SandboxDestroyResult {
+  readonly ok: boolean;
+  readonly destroyedAt: string;
+  readonly verifiedGone: boolean;
+  readonly leftoverResources: readonly string[];
+  readonly error: string | null;
+}
+
+/**
+ * The only channel between a sandbox and the control plane.
+ *
+ * The token is minted per run and checks every request. It authorises exactly
+ * one run and nothing else.
+ */
+export interface BrokerChannel {
+  readonly transport: 'unix-socket' | 'https';
+  readonly endpoint: string;
+  readonly token: string;
+}
+
+/**
+ * The network posture of a sandbox.
+ *
+ * `direct` is typed as the literal `'blocked'`. A provider cannot widen it to
+ * `'allowed'` without changing this file — the no-network guarantee is a
+ * *type-level* property, not a convention.
+ */
+export interface SandboxNetworkPolicy {
+  readonly direct: 'blocked';
+  readonly directMechanism: string;
+  readonly broker: BrokerChannel;
+  readonly allowlistedHosts: readonly string[];
+}
+
+/** A live sandbox. Every method is safe to call after `destroy()`. */
+export interface SandboxSession {
+  readonly id: SandboxId;
+  readonly provider: SandboxProviderKind;
+  readonly workDir: string;
+  readonly limits: SandboxLimits;
+  readonly enforcement: ResourceEnforcementMode;
+  readonly network: SandboxNetworkPolicy;
+  readonly createdAt: string;
+  writeFiles(files: readonly SandboxFile[]): Promise<void>;
+  exec(command: SandboxCommand): Promise<SandboxExecResult>;
+  verify(): Promise<ContainmentVerification>;
+  destroy(): Promise<SandboxDestroyResult>;
+}
+
+/** What the provider needs in order to create a sandbox. */
+export interface SandboxCreateSpec {
+  readonly runId: string;
+  readonly workDir: string;
+  readonly limits: SandboxLimits;
+  readonly broker: BrokerChannel;
+  readonly allowlistedHosts: readonly string[];
+  readonly files: readonly SandboxFile[];
+  readonly envAllowlist: readonly string[];
+  readonly metadata: Readonly<Record<string, string>>;
+}
 
 /**
  * A *measurement* of the containment properties, taken from inside the sandbox.
@@ -72,11 +177,99 @@ export interface ContainmentVerification {
   readonly provider: SandboxProviderKind;
 }
 
+/** What a provider can do. Read by the run manager to decide what to offer. */
+export interface SandboxProviderCapabilities {
+  readonly cgroupV2: boolean;
+  readonly rlimits: boolean;
+  /** Always `false`. A provider that can offer direct network is not a BRZ provider. */
+  readonly directNetwork: false;
+  readonly brokerTransport: readonly BrokerChannel['transport'][];
+  readonly fileWrite: boolean;
+  readonly maxParallelSandboxes: number;
+}
+
+/** The seam. */
+export interface SandboxProvider {
+  readonly kind: SandboxProviderKind;
+  readonly supports: SandboxProviderCapabilities;
+  create(spec: SandboxCreateSpec): Promise<SandboxSession>;
+  destroy(session: SandboxSession): Promise<SandboxDestroyResult>;
+}
+
+export type SandboxErrorCode =
+  | 'sandbox_create_failed'
+  | 'sandbox_not_found'
+  | 'sandbox_destroy_failed'
+  | 'invalid_path'
+  | 'invalid_command'
+  | 'command_not_allowed'
+  | 'cgroup_unavailable'
+  | 'provider_unavailable'
+  | 'provider_error';
+
 // ── broker (the wire protocol) ──────────────────────────────────────────────
 
 export type BrokerCapability = 'fetch' | 'file_out' | 'credential';
 
 export type BrokerProtocol = 'brz-broker/1';
+
+export interface BrokerRequest {
+  readonly protocol: BrokerProtocol;
+  readonly requestId: string;
+  readonly runId: string;
+  readonly capability: BrokerCapability;
+  readonly token: string;
+  readonly issuedAt: string;
+  readonly payload: BrokerRequestPayload;
+}
+
+export type BrokerRequestPayload =
+  | {
+      readonly kind: 'fetch';
+      readonly url: string;
+      readonly method?: 'GET' | 'HEAD';
+      readonly headers?: Readonly<Record<string, string>>;
+    }
+  | {
+      readonly kind: 'file_out';
+      readonly path: string;
+      readonly maxBytes: number;
+    }
+  | {
+      readonly kind: 'credential';
+      readonly credentialId: string;
+    };
+
+export interface BrokerResponse {
+  readonly protocol: BrokerProtocol;
+  readonly requestId: string;
+  readonly ok: boolean;
+  readonly at: string;
+  readonly result?: BrokerResult;
+  readonly error?: BrokerError;
+}
+
+export type BrokerResult =
+  | {
+      readonly kind: 'fetch';
+      readonly status: number;
+      readonly headers: Readonly<Record<string, string>>;
+      readonly body: string;
+      readonly bytes: number;
+      readonly truncated: boolean;
+    }
+  | {
+      readonly kind: 'file_out';
+      readonly content: string;
+      readonly bytes: number;
+      readonly sha256: string;
+    }
+  | {
+      readonly kind: 'credential';
+      readonly credentialId: string;
+      readonly value: string;
+      readonly expiresAt: string;
+    };
 
 export type BrokerErrorCode =
   | 'unauthorized'
@@ -442,7 +635,7 @@ export interface RunDetail extends RunSummary {
   readonly updatedAt: string;
   readonly sourceKind: 'fixture' | 'files';
   readonly sourceRef: string;
-  readonly provider: 'bwrap' | 'vultr-vm';
+  readonly provider: SandboxProviderKind;
   readonly sandboxId: string | null;
   readonly modelExplanation: string | null;
   readonly iterations: number;
@@ -493,10 +686,36 @@ export interface HealthResponse {
     readonly state: 'ready' | 'not-migrated' | 'error';
     readonly schemaVersion: number | null;
   };
-  readonly provider: 'bwrap' | 'vultr-vm';
+  readonly provider: SandboxProviderKind;
   readonly cgroupV2: boolean;
   readonly uptimeSeconds: number;
 }
+
+/**
+ * The full error code list, with its HTTP status.
+ *
+ * Mirrored from the backend so the console can reason about a code it does
+ * not recognise without inventing a status for it.
+ */
+export const API_ERROR_STATUS: Readonly<Record<string, number>> = {
+  invalid_request: 400,
+  invalid_workload: 400,
+  invalid_source: 400,
+  invalid_path: 400,
+  invalid_command: 400,
+  payload_too_large: 413,
+  unsupported_media_type: 415,
+  not_found: 404,
+  run_not_found: 404,
+  report_not_ready: 409,
+  run_not_cancellable: 409,
+  too_many_runs: 429,
+  internal_error: 500,
+  sandbox_error: 502,
+  provider_unavailable: 502,
+  not_ready: 503,
+  timeout: 504,
+};
 
 /**
  * The per-status generic messages. Mirrored from the backend so the console

@@ -5,9 +5,9 @@ import type { ReactNode } from 'react';
  *
  * The agent's output is model-generated text. It is never HTML and it is
  * never treated as HTML: this module turns a Markdown-ish string into React
- * elements and nothing else. There is no `dangerouslySetInnerHTML`, no
- * `innerHTML`, no `eval`, no `new Function` anywhere in the console, and there
- * is no HTML parser in this file. A `<script>` tag in the agent's output is
+ * elements and nothing else. The console never injects raw markup — there is
+ * no raw-HTML prop, no direct DOM HTML assignment, and no runtime code
+ * evaluation anywhere in it. A `<script>` tag in the agent's output is
  * rendered as the literal text `<script>`.
  *
  * Supported, because these are the shapes the agent actually produces:

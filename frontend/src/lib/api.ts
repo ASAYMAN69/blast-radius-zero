@@ -9,8 +9,8 @@ import type {
   ListWorkloadsResponse,
   SubmitRunRequest,
   SubmitRunResponse,
-} from './types.ts';
-import { API_ERROR_MESSAGES } from './types.ts';
+} from './types';
+import { API_ERROR_MESSAGES } from './types';
 
 /**
  * The console's fetch client.
@@ -136,6 +136,34 @@ export interface BrzApi {
   listFixtures(): Promise<ListFixturesResponse>;
 }
 
+/**
+ * A response that does not match the contract is not rendered.
+ *
+ * The control plane is built in parallel with this console, so a shape
+ * mismatch is a real possibility rather than a theoretical one. When it
+ * happens the console shows an honest error state instead of crashing on an
+ * undefined field.
+ */
+function malformed(what: string): ApiError {
+  return new ApiError(
+    'api',
+    'malformed_response',
+    `The control plane sent a ${what} the console could not read.`,
+    200,
+    null,
+  );
+}
+
+function expectArray(value: unknown, what: string): readonly unknown[] {
+  if (!Array.isArray(value)) throw malformed(what);
+  return value;
+}
+
+function expectObject(value: unknown, what: string): Record<string, unknown> {
+  if (!isRecord(value)) throw malformed(what);
+  return value;
+}
+
 interface RequestOptions {
   readonly method?: 'GET' | 'POST';
   readonly body?: unknown;
@@ -169,38 +197,74 @@ export class HttpApi implements BrzApi {
   }
 
   listRuns(): Promise<ListRunsResponse> {
-    return this.request<ListRunsResponse>('/runs');
+    return this.request<ListRunsResponse>('/runs').then((body) => {
+      const response = expectObject(body, 'run list');
+      expectArray(response['runs'], 'run list');
+      return body;
+    });
   }
 
   getRun(runId: string): Promise<GetRunResponse> {
-    return this.request<GetRunResponse>(`/runs/${encodeURIComponent(runId)}`);
+    return this.request<GetRunResponse>(`/runs/${encodeURIComponent(runId)}`).then((body) => {
+      expectObject(expectObject(body, 'run')['run'], 'run');
+      return body;
+    });
   }
 
   submitRun(request: SubmitRunRequest): Promise<SubmitRunResponse> {
-    return this.request<SubmitRunResponse>('/runs', { method: 'POST', body: request });
+    return this.request<SubmitRunResponse>('/runs', { method: 'POST', body: request }).then((body) => {
+      expectObject(body, 'run acknowledgement');
+      return body;
+    });
   }
 
   listEvents(runId: string, after?: number): Promise<ListEventsResponse> {
     const query = after === undefined ? '' : `?after=${String(after)}`;
-    return this.request<ListEventsResponse>(`/runs/${encodeURIComponent(runId)}/events${query}`);
+    return this.request<ListEventsResponse>(`/runs/${encodeURIComponent(runId)}/events${query}`).then((body) => {
+      const response = expectObject(body, 'event stream');
+      expectArray(response['events'], 'event stream');
+      return body;
+    });
   }
 
   getReport(runId: string): Promise<GetReportResponse> {
-    return this.request<GetReportResponse>(`/runs/${encodeURIComponent(runId)}/report`);
+    return this.request<GetReportResponse>(`/runs/${encodeURIComponent(runId)}/report`).then((body) => {
+      expectObject(expectObject(body, 'report')['report'], 'report');
+      return body;
+    });
   }
 
   cancelRun(runId: string): Promise<CancelRunResponse> {
     return this.request<CancelRunResponse>(`/runs/${encodeURIComponent(runId)}/cancel`, {
       method: 'POST',
+    }).then((body) => {
+      expectObject(body, 'cancellation');
+      return body;
     });
   }
 
   listWorkloads(): Promise<ListWorkloadsResponse> {
-    return this.request<ListWorkloadsResponse>('/workloads');
+    return this.request<ListWorkloadsResponse>('/workloads').then((body) => {
+      const response = expectObject(body, 'workload list');
+      for (const entry of expectArray(response['workloads'], 'workload list')) {
+        const workload = expectObject(entry, 'workload');
+        expectArray(workload['tools'], 'workload');
+        expectArray(workload['sourceKinds'], 'workload');
+      }
+      return body;
+    });
   }
 
   listFixtures(): Promise<ListFixturesResponse> {
-    return this.request<ListFixturesResponse>('/fixtures');
+    return this.request<ListFixturesResponse>('/fixtures').then((body) => {
+      const response = expectObject(body, 'fixture list');
+      for (const entry of expectArray(response['fixtures'], 'fixture list')) {
+        const fixture = expectObject(entry, 'fixture');
+        expectArray(fixture['files'], 'fixture');
+        expectArray(fixture['allowedCommands'], 'fixture');
+      }
+      return body;
+    });
   }
 }
 
@@ -208,14 +272,29 @@ export class HttpApi implements BrzApi {
  * Ask the control plane whether it is there, and whether it will let us in.
  *
  * The answer decides one of three things:
- *   - `live`          — the control plane answered and we may talk to it.
+ *   - `live`          — the control plane answered with its own response shape.
  *   - `unauthorized`  — something in front of it answered 401/403.
  *   - `unreachable`   — nothing answered; the console falls back to fixtures.
+ *
+ * The distinction between "the control plane is unwell" and "the control plane
+ * is not there" matters, and a bare status code cannot make it: a development
+ * proxy answers `500` with an empty body when its upstream is refused. So the
+ * body is inspected — a real control plane always answers with either its
+ * response shape or its error envelope, and anything else did not come from
+ * the control plane at all.
  */
 export type ProbeResult =
   | { readonly state: 'live' }
   | { readonly state: 'unauthorized'; readonly error: ApiError }
   | { readonly state: 'unreachable'; readonly error: ApiError };
+
+function unreachableError(): ApiError {
+  return new ApiError('network', 'network_error', OFFLINE_MESSAGE, 0, null);
+}
+
+function looksLikeRunList(value: unknown): boolean {
+  return isRecord(value) && Array.isArray(value['runs']);
+}
 
 export async function probeControlPlane(timeoutMs = 4000): Promise<ProbeResult> {
   const controller = new AbortController();
@@ -226,20 +305,31 @@ export async function probeControlPlane(timeoutMs = 4000): Promise<ProbeResult> 
       signal: controller.signal,
       headers: { Accept: 'application/json' },
     });
+
     if (response.status === 401 || response.status === 403) {
       return { state: 'unauthorized', error: await toApiError(response) };
     }
-    if (!response.ok) {
-      // A 5xx from the control plane means it is there but unwell. That is an
-      // error state, not a reason to swap in fixtures.
-      return { state: 'live' };
+
+    const text = await response.text();
+    let body: unknown = null;
+    try {
+      body = text === '' ? null : (JSON.parse(text) as unknown);
+    } catch {
+      body = null;
     }
-    return { state: 'live' };
+
+    if (response.ok) {
+      return looksLikeRunList(body)
+        ? { state: 'live' }
+        : { state: 'unreachable', error: unreachableError() };
+    }
+
+    // A failure that carries the standard envelope came from the control
+    // plane: it is there, it is just unhappy. Anything else did not.
+    const isEnvelope = isRecord(body) && isRecord(body['error']) && typeof body['error']['code'] === 'string';
+    return isEnvelope ? { state: 'live' } : { state: 'unreachable', error: unreachableError() };
   } catch {
-    return {
-      state: 'unreachable',
-      error: new ApiError('network', 'network_error', OFFLINE_MESSAGE, 0, null),
-    };
+    return { state: 'unreachable', error: unreachableError() };
   } finally {
     clearTimeout(timer);
   }

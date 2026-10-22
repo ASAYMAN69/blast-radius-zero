@@ -1,8 +1,8 @@
-import type { RunSummary } from '../lib/types.ts';
-import { formatDuration, formatRelative, shortId } from '../lib/format.ts';
-import { StatusPill, VerdictBadge } from './Badges.tsx';
-import { EmptyState, ErrorState, LoadingState } from './States.tsx';
-import type { AsyncState } from '../lib/state.ts';
+import type { RunSummary } from '../lib/types';
+import { formatDuration, formatRelative, shortId } from '../lib/format';
+import { StatusPill, VerdictBadge } from './Badges';
+import { EmptyState, ErrorState, LoadingState } from './States';
+import type { AsyncState } from '../lib/state';
 
 /**
  * The run list — the console's home screen.

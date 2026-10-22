@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import type { ApiError } from '../lib/api.ts';
+import type { ApiError } from '../lib/api';
 
 /**
  * The five states, as components.

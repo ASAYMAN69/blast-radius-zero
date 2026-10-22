@@ -1,6 +1,6 @@
-import { ApiError } from './api.ts';
-import type { BrzApi } from './api.ts';
-import { newRunId, newSandboxId } from './ids.ts';
+import { ApiError } from './api';
+import type { BrzApi } from './api';
+import { newRunId, newSandboxId } from './ids';
 import type {
   BlastRadiusReport,
   BlastRadiusVerdict,
@@ -28,7 +28,7 @@ import type {
   WorkloadDescriptor,
   WorkloadFixture,
   WrittenFile,
-} from './types.ts';
+} from './types';
 
 /**
  * The offline fixture set.
@@ -150,7 +150,12 @@ export const WORKLOAD: WorkloadDescriptor = {
 
 // ── helpers ─────────────────────────────────────────────────────────────────
 
-const EPOCH = Date.parse('2026-10-23T11:42:00.000Z');
+/**
+ * The fixture clock is anchored a little in the past, not to a hard-coded
+ * date, so the sample runs always look like recent history rather than
+ * timestamps from the future.
+ */
+const EPOCH = Date.now() - 90_000;
 
 function iso(offsetMs: number): string {
   return new Date(EPOCH + offsetMs).toISOString();
@@ -215,7 +220,7 @@ interface ReportSeed {
   readonly allowlist: readonly string[];
   readonly memoryPeakBytes: number;
   readonly memoryCapBytes: number;
-  readonly cpuSeconds: number;
+  readonly cpuSeconds: Measured<number>;
   readonly cpuCapSeconds: number;
   readonly maxProcessesObserved: number;
   readonly processCap: number;
@@ -303,7 +308,7 @@ function buildReport(seed: ReportSeed): BlastRadiusReport {
       wallClockCapMs: seed.wallClockCapMs,
       memoryPeakBytes: measured(seed.memoryPeakBytes),
       memoryCapBytes: seed.memoryCapBytes,
-      cpuSeconds: measured(seed.cpuSeconds),
+      cpuSeconds: seed.cpuSeconds,
       cpuCapSeconds: seed.cpuCapSeconds,
       maxProcessesObserved: measured(seed.maxProcessesObserved),
       processCap: seed.processCap,
@@ -528,7 +533,7 @@ const SUCCESS_REPORT = buildReport({
   allowlist: [],
   memoryPeakBytes: 41_246_720,
   memoryCapBytes: 134_217_728,
-  cpuSeconds: 0.31,
+  cpuSeconds: measured(0.31),
   cpuCapSeconds: 60,
   maxProcessesObserved: 3,
   processCap: 64,
@@ -674,7 +679,7 @@ const FAILURE_REPORT = buildReport({
   allowlist: [],
   memoryPeakBytes: 38_273_024,
   memoryCapBytes: 134_217_728,
-  cpuSeconds: 0.29,
+  cpuSeconds: measured(0.29),
   cpuCapSeconds: 60,
   maxProcessesObserved: 3,
   processCap: 64,
@@ -808,7 +813,10 @@ const CAP_REPORT = buildReport({
   allowlist: [],
   memoryPeakBytes: 134_217_728,
   memoryCapBytes: 134_217_728,
-  cpuSeconds: 61.4,
+  // The sandbox was OOM-killed and the cgroup was torn down at once, so the
+  // CPU accounting was never read back. The report says "not measured" with
+  // a reason — it never claims a zero it did not observe.
+  cpuSeconds: notMeasured('the cgroup was removed at teardown before cpu.stat could be read back'),
   cpuCapSeconds: 60,
   maxProcessesObserved: 4,
   processCap: 64,
@@ -976,7 +984,7 @@ Both tests pass. The refusal is expected — the egress allowlist is empty, so e
   allowlist: [],
   memoryPeakBytes: 42_991_616,
   memoryCapBytes: 134_217_728,
-  cpuSeconds: 0.34,
+  cpuSeconds: measured(0.34),
   cpuCapSeconds: 60,
   maxProcessesObserved: 3,
   processCap: 64,
@@ -1164,9 +1172,9 @@ export const FIXTURE_RUNS: readonly FixtureRun[] = [
 // ── the fixture transport ───────────────────────────────────────────────────
 
 interface SimulatedRun {
-  readonly run: RunDetail;
-  readonly events: RunEvent[];
-  readonly report: BlastRadiusReport | null;
+  run: RunDetail;
+  events: RunEvent[];
+  report: BlastRadiusReport | null;
   cursor: number;
 }
 
@@ -1353,8 +1361,16 @@ export class FixtureApi implements BrzApi {
       const batch = simulated.events.slice(simulated.cursor, simulated.cursor + 2);
       simulated.cursor += batch.length;
       const finished = simulated.cursor >= simulated.events.length;
-      if (finished && simulated.run.status === 'queued') {
-        simulated.run = { ...simulated.run, status: 'running', phase: 'executing', updatedAt: new Date().toISOString() };
+      const lastEvent = batch[batch.length - 1];
+      if (lastEvent !== undefined) {
+        const phase = finished ? 'done' : lastEvent.phase;
+        const status: RunStatus = finished ? 'succeeded' : 'running';
+        simulated.run = {
+          ...simulated.run,
+          status,
+          phase,
+          updatedAt: new Date().toISOString(),
+        };
       }
       if (finished) {
         const report = scriptedReport(runId, simulated.run.sandboxId ?? 'sbx_0000000000000000', simulated.run.createdAt);

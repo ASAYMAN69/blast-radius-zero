@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 07 — Revise the commercial document: four decisions from the coordinator
 

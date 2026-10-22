@@ -46,8 +46,18 @@ export function formatTime(iso: string | null | undefined): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-export function formatDateTime(iso: string | null | undefined): string {
+/**
+ * Wall-clock time with milliseconds. A run's events land inside a few
+ * seconds of each other, so a second-resolution clock cannot order them.
+ */
+export function formatTimePrecise(iso: string | null | undefined): string {
   if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}.${pad(date.getMilliseconds(), 3)}`;
+}
+
+export function formatDateTime(iso: string | null | undefined): string {  if (!iso) return '—';
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '—';
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;

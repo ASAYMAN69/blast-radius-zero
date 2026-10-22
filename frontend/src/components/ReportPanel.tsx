@@ -6,11 +6,11 @@ import type {
   Measured,
   ResourceEnforcementMode,
   SandboxKillReason,
-} from '../lib/types.ts';
-import { formatBytes, formatDuration, formatSeconds, formatTime, usagePercent } from '../lib/format.ts';
-import { verdictLabel } from './Badges.tsx';
-import { ErrorState, NotReadyState, UnauthorizedState } from './States.tsx';
-import type { ReportState } from '../hooks/useRun.ts';
+} from '../lib/types';
+import { formatBytes, formatDuration, formatSeconds, formatTime, usagePercent } from '../lib/format';
+import { verdictLabel } from './Badges';
+import { ErrorState, NotReadyState, UnauthorizedState } from './States';
+import type { ReportState } from '../hooks/useRun';
 
 /**
  * The blast-radius report.

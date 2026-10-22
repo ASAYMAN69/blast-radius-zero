@@ -1,4 +1,4 @@
-import type { ApiError } from './api.ts';
+import type { ApiError } from './api';
 
 /**
  * The five states every screen in the console can be in.

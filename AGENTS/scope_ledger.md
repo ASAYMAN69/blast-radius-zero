@@ -30,8 +30,9 @@
 | 1 | `02-market-and-monetization.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **RELEASED** (off critical path) |
 | 2 | `04-backend-core.md` | BACKEND | `backend/src/**` except `backend/src/sandbox/**`, `backend/src/broker/**` | none — all manifests are HEAD's | **RELEASED** |
 | 2 | `08-contract-gap-and-fallbacks.md` | BACKEND | `backend/src/contracts/sandbox.ts`, `backend/src/contracts/report.ts`, `backend/src/inference/**`, `backend/src/config.ts`, `backend/src/runs/report.ts`, `backend/src/runs/manager.ts`, `backend/src/demo/**`, `backend/test/**` | none | **READY** |
-| 2 | `05-frontend-phase1.md` | FRONTEND | `frontend/src/**` | none — all manifests are HEAD's | **ACTIVE** |
-| 2 | `07-commercial-revision.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **ACTIVE** |
+| 2 | `05-frontend-phase1.md` | FRONTEND | `frontend/**` (the manifest `frontend/package.json` is HEAD's) | none | **RELEASED** |
+| 2 | `09-commercial-decisions.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **READY** |
+| 2 | `07-commercial-revision.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **RELEASED** |
 | 3 | `06-backend-containment.md` | BACKEND | `backend/src/sandbox/**`, `backend/src/broker/**`, `deploy/**` | `deploy/**` | PLANNED (needs wave 2 released) — **now also owns: deleting the stand-in, flipping the provider default to `bwrap`, removing the `'standin'` union member, and the two new probe fields** |
 | 4 | CI + PR hygiene | GITMASTER | `.github/**`, `scripts/ci/**` | serialized | PLANNED |
 | 4 | UI design review | DESIGNER | `docs/design/01-phase1-ui-review.md` | — | PLANNED |

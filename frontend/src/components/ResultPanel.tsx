@@ -1,6 +1,6 @@
-import { renderMarkdown } from '../lib/markdown.tsx';
-import type { BlastRadiusReport, RunDetail } from '../lib/types.ts';
-import { EmptyState } from './States.tsx';
+import { renderMarkdown } from '../lib/markdown';
+import type { BlastRadiusReport, RunDetail } from '../lib/types';
+import { EmptyState } from './States';
 
 /**
  * The agent's output.
@@ -9,8 +9,8 @@ import { EmptyState } from './States.tsx';
  * the product:
  *
  *   1. **What the agent said.** Its closing explanation, rendered as text —
- *      Markdown becomes React elements, never HTML. There is no
- *      `dangerouslySetInnerHTML` anywhere in this console.
+ *      Markdown becomes React elements, never HTML. The console never injects
+ *      raw markup.
  *   2. **What the sandbox decided.** The verification run's exit code and
  *      result. The model's claim is shown next to it, and the sandbox's
  *      verdict is the one that counts.

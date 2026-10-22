@@ -1,8 +1,20 @@
 # 01 — Market, buyer, and monetization for BRZ
 
-> **Agent:** BUSINESS · **Date:** 2026-10-23 · **Brief:** `AGENTS/briefs/02-market-and-monetization.md`
-> **Status:** complete · **Product-agnostic by design** — the flagship workload is not yet chosen. Where the workload choice moves a number, the range is given and the direction of the move is stated.
+> **Agent:** BUSINESS · **Date:** 2026-10-23 · **Brief:** `AGENTS/briefs/02-market-and-monetization.md` · **Revision 2** (2026-10-23, brief `AGENTS/briefs/07-commercial-revision.md`)
+> **Status:** complete · **The flagship workload is now decided** — `self-healing-runner` (`docs/architecture/02-phase1-design.md` §2.1). It is the code-execution column this document was already sized on, so **no number moved**; the sensitivity in §0.5 is kept because it is what tells a judge how much the number depends on that choice.
 > **All web sources fetched 2026-10-23.** Full source register in §H.
+
+---
+
+> ### 📌 Revision 2 — 2026-10-23
+> Revised on the coordinator's instruction (brief `AGENTS/briefs/07-commercial-revision.md`). **No derived number changed; every figure in this document recomputes exactly as it did in revision 1.** Four changes, each of which makes the document *more* defensible, not less:
+>
+> - **A — Lead with the beachhead, demote the TAM.** The $1.65B TAM was the weakest number here and held headline slot #1. The **62,381 policy-gated organisations / $396.1M per year** beachhead is now the headline; the TAM is still present, still labelled `derived (low)`, and is now framed as **the ceiling the policy gate creates** rather than as the number we sell into. §0.1, §A.3, §A.5, §E.3, §G.
+> - **B — The certification dates become costed, budget-flagged plans.** SOC 2 Type I (Dec 2026) and Type II (Sep 2027) now each carry a **sourced cost band** and an explicit **`requires budget approval — not currently funded`** flag, and no longer read as promises. §E.3, §E.4.1, §E.4.2.
+> - **C — The Enterprise tier no longer depends on a certification we do not have.** It is now anchored on **tenancy, volume, retention, export, and SLA** in §D.1, §B.1 and §C.1. §C.2 weakness #2 keeps its weight; only its consequence sentence changed, because the consequence is no longer "this blocks the tier". §C.2, §C.3.
+> - **D — The isolation ladder now matches engineering reality.** "We lose the isolation axis" is replaced by "we lose it **today**, on a dated ladder": **Tier 1** namespaces + cgroups (shipping now) → **Tier 2** per-task throwaway Vultr VM (Nov 2026) → **Tier 3** microVM-grade isolation (2027). §C.1, §C.3, §E.4.1.
+>
+> **One change outside those four, as authorised by the same brief:** §0.5 — the workload is no longer undecided, and the section now says so and cites the design document. **Also updated for accuracy, and flagged here so the coordinator can reverse it:** §G item 12, which previously said the workload "is not chosen". It now records the decision and keeps the sensitivity as the caveat. No weakness was softened and no caveat was removed.
 
 ---
 
@@ -10,18 +22,22 @@
 
 ### 0.1 The ten numbers
 
+> **The headline is the beachhead, not the TAM.** We lead with the number we can actually sell into today — the organisations where agent execution is *already* gated by a policy or a security reviewer. The total market (§0.1 #10) is still in this table, still labelled low-confidence, and is now framed as **the ceiling that the policy gate creates**, not as our market. The reason for the demotion is recorded in §G.
+
 | # | Number | Confidence |
 |---|---|---|
-| 1 | **1.65 billion USD/yr** — total market for the containment/assurance layer over agent execution (TAM) | `derived` (low — see §A.3) |
-| 2 | **396 million USD/yr** — beachhead/serviceable market: organisations where agent execution is gated by policy or security review | `derived` |
-| 3 | **145 million USD/yr** — the regulated sub-segment inside the beachhead, at 2.45× the general price | `derived` |
-| 4 | **62,381 organisations** — the beachhead population, built from GitHub accounts, agent-workflow adoption, and employer AI-policy rates | `derived` |
-| 5 | **6,349 USD/yr** — blended annual contract value across the three price tiers | `derived` |
-| 6 | **99 / 499 / 3,000 USD per month** — Starter / Team / Enterprise platform fee, plus per-task overage | `assumed` (anchored on competitor prices, §D.1) |
-| 7 | **0.0257 USD** — BRZ's variable cost per contained task (0.0037 compute + 0.0220 inference). **Inference is 86% of it.** | `derived` |
-| 8 | **20,473 USD/month MRR** and **245,676 USD ARR run-rate** at month 12 of the base case | `derived` from a stated ramp |
-| 9 | **Month 11 (Sep 2027)** — operating break-even, at 35 customers. Cross-checked two ways: 28.0 customers, or 89,805 tasks/month | `derived` |
-| 10 | **188** — verified enterprise AI incidents where an autonomous system caused harm **with no attacker in the chain** | `sourced` (Cyera Research, May 2026) |
+| 1 | **62,381 organisations · $396.1M/yr** — the **beachhead**: organisations running agent workflows where a policy or a security review already gates the execution. *This is the number we sell into today.* | `derived` (§A.2, §A.5) |
+| 2 | **$145.3M/yr** — the regulated sub-segment inside the beachhead, at 2.45× the general price | `derived` |
+| 3 | **188** — verified enterprise AI incidents where an autonomous system caused harm **with no attacker in the chain** | `sourced` (Cyera Research, May 2026) |
+| 4 | **$99 / $499 / $3,000 per month** — Starter / Team / Enterprise platform fee, plus per-task overage | `assumed` (anchored on competitor prices, §D.1) |
+| 5 | **$6,349/yr** — blended annual contract value across the three price tiers | `derived` |
+| 6 | **$0.0257 per contained task** — BRZ's variable cost (0.0037 compute + 0.0220 inference). **Inference is 86% of it.** | `derived` |
+| 7 | **$20,473/month MRR** and **$245,676/yr ARR run-rate** at month 12 of the base case | `derived` from a stated ramp |
+| 8 | **Month 11 (Sep 2027)** — operating break-even, at 35 customers. Cross-checked two ways: 28.0 customers, or 89,805 tasks/month | `derived` |
+| 9 | **$49.50–$198.00/month** — the *entire* managed-sandbox compute bill for a ten-developer team, against **$5.65** on BRZ. This is why we sell a platform, not compute. | `sourced` (Fly.io, Oct 2026) + `derived` |
+| 10 | **$1.65B/yr** — total market for the containment/assurance layer (TAM). **The ceiling if the policy gate loosens** — the upside, not our market. | `derived` (low — see §A.3, §G) |
+
+**How #1 is derived, in one line:** 225,000,000 GitHub accounts ÷ 18.9 accounts per professional developer = **11,904,762** professional developers × 26.2% in agent-workflow organisations = **3,119,048** ÷ 12 developers per organisation = **259,921** organisations × 24% policy-gated = **62,381 organisations** × $6,349.20 blended ACV = **$396.1M/yr**. Every step is shown and recomputes in §A.2; the cross-checks are in §A.3; the caveats are in §A.5 and §G. `derived`
 
 ### 0.2 The five sentences a judge should remember
 
@@ -47,9 +63,11 @@
 
 ### 0.5 Where the workload choice moves a number
 
-The flagship workload is not chosen. This document is sized on the **execution substrate**, not the vertical, so most numbers do not move. Where they do:
+> **The workload is now decided: `self-healing-runner`** — a single-file Python bug fix with a stdlib `unittest` suite (`docs/architecture/02-phase1-design.md` §2.1, ARCHITECT). **It is a code-execution workload, which is the column this document is already sized on, so no number in this document moves.** The table below is kept because it is what tells a judge *how much* the numbers depend on that choice — the honest version of the claim, not a hedge on a decision that has been made. `sourced` (decision) · `derived` (sensitivity)
 
-| Number | If the workload is **code execution** (Self-Healing Runner, "A") | If the workload is **browser automation** (Site QA Sweep, "B") | If the workload is **research** (Research with Receipts, "C") |
+The table states the sensitivity of the sizing to the three workload candidates. The sizing below is stated on the **code-execution column**, which is the decided one:
+
+| Number | If the workload is **code execution** (Self-Healing Runner, "A") — **THE DECIDED CASE** | If the workload is **browser automation** (Site QA Sweep, "B") | If the workload is **research** (Research with Receipts, "C") |
 |---|---|---|---|
 | Tasks per developer per month | 80–120 | 40–70 | 20–40 |
 | Isolation primitive needed | Process + filesystem + caps | Process + **browser** + network allowlist | Process + **egress allowlist** |
@@ -65,23 +83,23 @@ The flagship workload is not chosen. This document is sized on the **execution s
 | Brief item | Section | The answer, in one line |
 |---:|---|---|
 | 1 · Category definition | §A.1 | "Infrastructure that runs AI-generated code and AI-driven tool calls inside a per-task execution boundary, and produces the evidence that the boundary held" — four load-bearing properties, plus seven adjacent categories and where BRZ sits in each. |
-| 2 · Bottom-up sizing + cross-check | §A.2, §A.3 | 225M GitHub accounts -> 11.9M professional devs -> 3.12M in agent-workflow orgs -> 259,921 orgs -> 62,381 policy-gated. Cross-checked against Gartner's $9.8–11.0B and MarketsandMarkets' $7.06B/$93.20B, and against Fly.io's published per-session compute costs. |
-| 3 · Segments + beachhead | §A.4 | Four segments sized separately. Beachhead = enterprise platform / AI-enablement teams, 28,071 orgs, $178.2M/yr. Regulated sub-segment = 9,357 orgs, $145.3M/yr at 2.45× ACV. |
+| 2 · Bottom-up sizing + cross-check | §A.2, §A.3, §A.5 | 225M GitHub accounts -> 11.9M professional devs -> 3.12M in agent-workflow orgs -> 259,921 orgs -> 62,381 policy-gated (**the headline**). Cross-checked against Gartner's $9.8–11.0B and MarketsandMarkets' $7.06B/$93.20B, and against Fly.io's published per-session compute costs. |
+| 3 · Segments + beachhead | §A.4, §A.5 | Four segments sized separately. Beachhead = enterprise platform / AI-enablement teams, 28,071 orgs, $178.2M/yr. Regulated sub-segment = 9,357 orgs, $145.3M/yr at 2.45× ACV. |
 | 4 · Named buyer | §B.1 | Head of Platform Engineering / Director of AI Enablement (budget); security reviewer (veto); CISO (signatory in regulated orgs). |
 | 5 · What the job costs them | §B.2 | $4.99M average breach · $6M AI-enabled breach · 188 autonomous-harm incidents · 65 deletion cases · a $47,000 incident cut to $200 · SOC 2 at $50k–$150k/yr. |
 | 6 · The alternative, incl. in-house | §B.3 | Seven alternatives compared, including the open-source primitives and the coding-agent vendors. In-house costs $380,744 over 18 months; **and it is the right answer for some buyers — named explicitly.** |
 | 7 · Why now | §B.4 | Six sourced changes: 75–90% AI-written code, 188 autonomous-harm incidents, the July 2026 OpenAI/Hugging Face escape, 6.6% trust, dated EU AI Act obligations, and a converged vendor ecosystem that left the governance gap open. |
 | 8 · Who does this today | §C.1 | 15 players: isolation model, runs-on-your-infra, pricing shape, and a per-session cost on one consistent shape. |
 | 9 · Better and worse | §C.2 | Six places BRZ is genuinely better; **eight where it is honestly worse**, led by the isolation primitive and the absence of certifications. |
-| 10 · Deck comparison | §C.3 | The 2×2, plus **three axes where a competitor beats us**, named and quantified. |
-| 11 · A price with a unit | §D.1 | One contained task; $99 / $499 / $3,000 per month plus overage; justified against nine price anchors and a per-developer sanity check. |
+| 10 · Deck comparison | §C.3 | The 2×2, plus **three axes where a competitor beats us**, named and quantified, plus the dated three-tier isolation ladder. |
+| 11 · A price with a unit | §D.1 | One contained task; $99 / $499 / $3,000 per month plus overage; justified against nine price anchors and a per-developer sanity check. The Enterprise tier is sold on **tenancy, volume, retention, export and SLA** — not on a certification we do not have. |
 | 12 · Revenue model | §D.2 | Subscription per organisation + metered task overage, and why that fits the buyer from §B.1. |
 | 13 · 12-month shape | §D.3 | A month-by-month ramp from zero to $20,473 MRR, with all driver assumptions stated, and bear / base / bull cases. |
 | 14 · Unit economics | §D.4 | $0.0257 variable cost per task (86% inference), 83.9% contribution margin, break-even at 28.0 customers / 89,805 tasks, plus **the four cases where it does not work**. |
 | 15 · The narrative | §E.1 | One paragraph, problem -> solution -> value, no jargon, no acronyms. |
 | 16 · Three sentences | §E.2 | 63 words, 25 seconds, spelled out. |
 | 17 · Slide outline + time budget | §E.3 | Ten segments totalling **4:40**, with a beat sheet for the 48-second containment moment. |
-| 18 · Future goals and plans | §E.4 | 8 product milestones and 8 commercial milestones, all dated Nov 2026 – Jan 2028, plus a validation plan with kill criteria. |
+| 18 · Future goals and plans | §E.4 | 8 product milestones and 8 commercial milestones, all dated Nov 2026 – Jan 2028, each certification row carrying a **sourced cost band and a `requires budget approval — not currently funded` flag**, plus a validation plan with kill criteria. |
 | 19 · The uncomfortable question | §F.1 | Answered in three parts, in pitch-usable language, including the weakness we concede first. |
 
 **Acceptance-criteria self-check**
@@ -89,12 +107,12 @@ The flagship workload is not chosen. This document is sized on the **execution s
 | Criterion | Where it is met |
 |---|---|
 | All 19 items answered, each with a number, a source, and a confidence label | §0.6 above; every table carries a `sourced` / `derived` / `assumed` column |
-| Market size is bottom-up with visible arithmetic and an independent cross-check | §A.2 step-by-step; §A.3 three cross-checks, with the disagreements stated |
-| Competitive landscape covers the in-house option honestly and names where a competitor beats BRZ | §B.3 option A; §C.2 "where BRZ is honestly worse"; §C.3 three axes |
+| Market size is bottom-up with visible arithmetic and an independent cross-check | §A.2 step-by-step; §A.3 three cross-checks, with the disagreements stated; §A.5 the beachhead in full, with its own checks and caveats |
+| Competitive landscape covers the in-house option honestly and names where a competitor beats BRZ | §B.3 option A; §C.2 "where BRZ is honestly worse"; §C.3 three axes; the dated isolation ladder in §C.1 |
 | A price, a revenue model, and unit economics per run, with assumptions written down | §D.1, §D.2, §D.4 |
 | Three sentences exist, are under 30 seconds spoken, and contain no jargon | §E.2 — 63 words, 25 seconds, checked |
 | Slide outline totals 4:00–4:45 and marks the containment moment | §E.3 — 4:40, containment moment at 1:32–2:20 |
-| Future goals are concrete and dated | §E.4.1 and §E.4.2 |
+| Future goals are concrete and dated | §E.4.1 and §E.4.2 — every certification row carries a sourced cost band and a `requires budget approval — not currently funded` flag |
 | The uncomfortable question is answered in pitch-usable language | §F.1 |
 | A closing "What this document does NOT claim" section | §G — twelve items, weakest first |
 | Written to `docs/business/01-market-and-monetization.md` only | Yes — this is the only file this brief created |
@@ -150,7 +168,7 @@ Every step is shown. Every step recomputes (verified with a calculator, 2026-10-
 | 1.6 | Average engineering organisation size, agent-workflow organisations | 12 | `assumed` |
 | 1.7 | **Organisations running agent workflows** = 1.5 ÷ 1.6 | 3,119,048 ÷ 12 = **259,921** | `derived` |
 
-> ⚠ **Two caveats, stated up front.** (a) Step 1.2 is a US ratio applied globally; if non-US developers have a lower accounts-per-professional ratio, step 1.3 is **overstated**. (b) Step 1.6 is a guess. A smaller average team inflates the organisation count and therefore the TAM. Both are flagged in §G.
+> ⚠ **Two caveats, stated up front.** (a) Step 1.2 is a US ratio applied globally; if non-US developers have a lower accounts-per-professional ratio, step 1.3 is **overstated**. (b) Step 1.6 is a guess. A smaller average team inflates the organisation count, and therefore **both** the beachhead and the TAM. Both are flagged in §G.
 
 #### Step 2 — The beachhead filter: where agent execution is gated by a reviewer
 
@@ -161,6 +179,8 @@ Every step is shown. Every step recomputes (verified with a calculator, 2026-10-
 | 2.3 | **Beachhead organisations** = 2.1 × 2.2 | 259,921 × 0.24 = **62,381** | `derived` |
 
 **Why this filter and not another.** A formal AI policy is the *precondition* for a containment purchase: if the employer has not decided what agents may do, nobody is buying a tool that decides what agents may do. The same survey shows **29.7% say AI use at their employer is left entirely to the individual** and only **24%** have a policy — the policy gap *is* the market.
+
+> **This is the headline number of the document** (§0.1 #1: 62,381 organisations, $396.1M/yr). Its standalone derivation, its cross-checks and its caveats are in **§A.5**. The TAM in step 4 is the same arithmetic without this filter, and is deliberately *not* the headline — see §A.3.
 
 #### Step 3 — Price per organisation (§D.1 for derivation)
 
@@ -176,10 +196,12 @@ Every step is shown. Every step recomputes (verified with a calculator, 2026-10-
 
 | Market | Calculation | Result | Confidence |
 |---|---|---:|---|
-| **TAM** — all organisations running agent workflows | 259,921 × $6,349.20 | **$1.650B / yr** | `derived` (low) |
-| **SAM** — beachhead, policy/security-gated | 62,381 × $6,349.20 | **$396.1M / yr** | `derived` |
+| **TAM** — all organisations running agent workflows. **The ceiling if the policy gate loosens**, not our market. | 259,921 × $6,349.20 | **$1.650B / yr** | `derived` (low) |
+| **SAM** — beachhead, policy/security-gated. **The headline; what we sell into today.** | 62,381 × $6,349.20 | **$396.1M / yr** | `derived` |
 | **SOM** — 24-month realistic capture at 1% of SAM | 624 × $6,349.20 | **$3.96M / yr ARR** | `derived` |
 | **Regulated sub-segment** | 9,357 orgs (15% of beachhead) × $15,532.20 | **$145.3M / yr** | `derived` |
+
+> **The relationship between the two, stated plainly:** the beachhead is **24.0% of the TAM** ($396.1M ÷ $1.650B) — exactly the policy-gate rate, because the filter is applied to the organisation count before the price. The difference between the two numbers is therefore **one sourced filter (24%)**, not a different market model. The TAM is what the same market looks like if every organisation running agents eventually adopts an AI policy; the beachhead is what it looks like today, among the 24% who already have one. `derived`
 
 > The regulated sub-segment carries a **2.45× higher ACV** ($15,532 vs $6,349) because its mix shifts toward Enterprise (35% vs 10%): 20% Starter / 45% Team / 35% Enterprise. This is where the price is defensible, because it is where the buyer has a *mandate* to produce evidence.
 
@@ -207,6 +229,8 @@ Every step is shown. Every step recomputes (verified with a calculator, 2026-10-
 | MarketsandMarkets: "Agentic AI Infrastructure" is the **largest** segment in 2025 | (size not broken out publicly) | `sourced` (ranking) / `assumed` (30–45% split) |
 | Gartner, 2026-04-15: only **17%** of organisations have deployed AI agents; **>60%** expect to within two years | — | `sourced` |
 | Gartner, 2025-08-26: **40%** of enterprise applications will include task-specific agents by end-2026, up from <5% | — | `sourced` |
+
+**What the TAM is, and what it is not.** $1.65B/yr is the **addressable ceiling if the policy gate loosens** — every organisation running agent workflows, on the assumption that all of them eventually adopt an AI policy and all of them buy a control plane at our blended price. It is **not** what we can sell into today. What we can sell into today is the **beachhead: 62,381 organisations, $396.1M/yr** (§0.1 #1, §A.5), which is the same arithmetic with one *sourced* filter applied. The TAM is therefore the upside case, and it is the number this document is least willing to lead with (§G item 1).
 
 **Cross-check 1 — our SAM against Gartner's tooling market.**
 $396.1M ÷ $11.0B = **3.6%**; ÷ $9.8B = **4.0%**.
@@ -249,6 +273,49 @@ That arithmetic told us we must not sell compute. It is also the single most use
 
 ---
 
+### A.5 — The beachhead, in full: the number we lead with (§2, §3)
+
+> **The headline: 62,381 policy-gated organisations, $396.1M per year.** This is the market BRZ can sell into *today* — the organisations where agent execution is already subject to a policy or a security review. It is the same arithmetic as §A.2 with one filter applied, and it is stated here on its own so a judge can attack it directly.
+
+**Derivation — every step, every source:**
+
+| Step | Calculation | Result | Confidence |
+|---|---|---:|---|
+| 1 | GitHub developer accounts (Microsoft FY26 Q4, 2026-07-29) | 225,000,000 | `sourced` |
+| 2 | ÷ 18.9 GitHub accounts per employed US software developer (Axis Intelligence / US BLS, Q1 2026) | 11,904,762 professional developers | `derived` |
+| 3 | × 26.2% whose organisation uses **automated agent workflows** (Stack Overflow 2026 Developer Survey, 30,903 respondents) | 3,119,048 developers | `derived` |
+| 4 | ÷ **12** average developers per agent-workflow organisation | 259,921 organisations | `derived` |
+| 5 | × **24%** whose employer has an **official AI policy or published approved tools** (Stack Overflow 2026) | **62,381 organisations** | `derived` |
+| 6 | × $6,349.20 blended ACV (§A.2 step 3) | **$396.1M/yr** | `derived` |
+
+**Three checks on the beachhead — one consistency check, two genuinely independent of the chain above:**
+
+| Check | Calculation | Result | Verdict |
+|---|---|---:|---|
+| **Population-side (consistency check — not independent)** — does the filter land where it should? | 62,381 orgs × 12 devs = 748,572 developers vs 3,119,048 in agent-workflow orgs | **24.0%** | The organisation filter and the developer filter are the same 24% statistic applied to the same population, so they agree **by construction rather than by luck**. We state this because it is a *consistency* check, not a second opinion. `derived` |
+| **Top-down** — is it a plausible slice of the tooling budget? | $396.1M ÷ $11.0B and ÷ $9.8B (Gartner, Apr 2026) | **3.6% – 4.0%** | A governance layer bought out of a *security* budget, not the tooling budget, at 3.6–4.0% of it, is conservative. `derived` |
+| **Bottom-up against our own plan** — is it reachable? | 40 customers at M12 ÷ 62,381 beachhead orgs | **0.064%** | The 12-month plan needs **less than a tenth of one percent** of the beachhead. The plan is hard; the market is not the binding constraint. `derived` |
+
+**What the beachhead is *not*, stated precisely:** it is a **filter, not a segment.** Of the 62,381, **28,071** are segment 1 (platform / AI-enablement teams of 50–1,000 developers, §A.4); the remaining **34,310** are smaller or non-platform teams that also happen to have a formal AI policy, and are served by the same price card at the same blended ACV. We do not claim all 62,381 are enterprise deals.
+
+**This subsection's own caveats — stated here rather than buried in §G:**
+
+1. **It inherits the assumed 12-developer organisation size** (step 1.6 of §A.2, `assumed`). This is the single largest uncertainty in the number, and it moves the beachhead and the TAM *together* — a smaller average team inflates both. **Demoting the TAM does not fix this**; the caveat belongs to both numbers.
+2. **The 24% is one survey's self-report** of whether an employer has an "official AI policy or published approved tools" — a loose proxy for "will buy containment." The same survey is the source of the 29.7% who said AI use is left entirely to the individual, which is the *reason* the filter is 24% and not higher.
+3. **A beachhead is a market, not a pipeline.** Nothing in this document claims we will reach any of it. See §0.3 and §E.4.3.
+4. **The filter is a proxy, so the number is elastic.** If the policy rate is wrong by half in either direction, the beachhead moves to ~31,000 organisations (~$198M/yr) or ~93,000 (~$594M/yr). The TAM does **not** move with it — the filter is applied on top of the TAM, not inside it.
+5. **The beachhead assumes policy-gated organisations buy at the same blended ACV as the rest.** We have never sold one. A filter that selects *buyers* does not guarantee *our* price is the one they accept.
+
+**Why we lead with this number rather than the bigger one.** Three reasons, in order of weight:
+
+1. **The TAM is wrong in *composition*, not just in size.** It counts all 259,921 organisations, including the ~120,000 AI-native startups of segment 3 — the segment this document itself calls "a trap," with "no budget for a control plane" (§A.4). The policy filter removes the ones with no policy at all, and by the definition of segment 3 ("agent-first, no compliance team") that is most of them. A number that counts organisations we have argued cannot buy is not a conservative number; it is a wrong one.
+2. **The beachhead is the only one of the two we could actually sell into in 2027.** The TAM is the ceiling; the beachhead is the market.
+3. **It can be attacked with two specific questions** — the 12-developer average and the 24% policy rate — both of which are stated, sourced or labelled `assumed`, and shown. A judge can attack it. A judge cannot wave away "$1.65B."
+
+**We are not hiding the TAM.** It is still in this document, still labelled `derived (low)`, still in the headline table at #10, and still in §G item 1 as the weakest claim in the document. We changed the *order*, because a judge reads the first number as the claim and the last number as a footnote, and the first number should be the one we can defend. `derived`
+
+---
+
 ## B. The buyer
 
 ### B.1 — Name the buyer (§4)
@@ -257,11 +324,23 @@ That arithmetic told us we must not sell compute. It is also the single most use
 >
 > **Veto holder: the security reviewer** (AppSec lead, staff security engineer, or a GRC manager). They do not want the product, but nothing ships without them.
 >
-> **Signatory in regulated organisations: the CISO or Head of Risk**, who signs off on the *evidence*, not on the tool.
+> **Signatory in regulated organisations: the CISO or Head of Risk**, who signs off on the *evidence*, not on the tool. (They sign off on what a run did and could not do — **not** on a certificate, because we do not have one to show them. §C.2 weakness #2.)
 
 **Why not "developers".** Developers do not buy $3,000/month platform software and they are not the ones who have to answer "prove the agent did not reach the production database." The budget for containment sits in platform infrastructure and, in regulated organisations, in security assurance. **The product is sold to the person whose approval is required, and is used by the person whose build broke.**
 
 **Budget line it comes from** (and therefore who has to be convinced): *platform infrastructure / CI budget* for Starter and Team; *security assurance / GRC budget* for Enterprise. That distinction is why the Enterprise tier is priced ten times higher than the Team tier: it is bought by a different person, out of a different budget, for a different reason.
+
+**What the Enterprise tier is sold on — and what it is *not* sold on.** Five things, all of which we can deliver without a certification:
+
+| Driver | What the customer gets | Why it is worth $3,000/month |
+|---|---|---|
+| **Tenancy** | A dedicated, isolated deployment on the customer's **own Vultr account**, inside their own network boundary. No control plane of ours to operate, no shared tenancy, no data in our cloud. | It is the isolation they would otherwise buy as a second vendor, and it is the answer to "where does our code live?" — asked by every security reviewer. |
+| **Volume** | 15,000 included contained tasks a month, with metered overage behind it. | It is the volume a 200-engineer platform team actually runs, and it makes the per-task cost work at their scale. |
+| **Retention** | Organisation-level audit-log retention, 365 days (**Mar 2027** — §E.4.1). | An incident review that cannot reach back 12 months is not an audit trail. |
+| **Export** | Evidence export in a form an auditor accepts (signed run manifest, hash-chained event log — **Apr 2027**, §E.4.1). | The report has to leave our UI and live in *their* evidence system, or it is not evidence. |
+| **SLA** | A signed support SLA with a named response time. | It converts a hobby project into something a platform team can put in an on-call rota. |
+
+**It is not sold on a certification.** We have no SOC 2, no ISO 27001, no HIPAA BAA and no signed DPA (§C.2 weakness #2). The consequence is honest and specific: **the regulated segment is deferred and the sales cycle is longer**, because a regulated buyer's procurement checklist will stall on the certificate we do not have. **It does not block the tier**, because the tier is sold on tenancy, volume, retention, export and SLA — each of which we either ship today or have a dated plan for (§D.1 states which is which). `derived` (§D.1)
 
 ---
 
@@ -353,11 +432,32 @@ Isolation model, whether it runs on your infrastructure, and the pricing shape. 
 | **Docker Sandboxes (local) / gVisor / Kata / Firecracker** | Primitives | Container / userspace kernel / VM / microVM | **Yes** | Free / open source | n/a |
 | **In-house** | Whatever you build | Whatever you choose — up to Firecracker-grade | **Yes** | 2.0 engineer-years + $95k/yr to run (§B.3) | your cost |
 | **Coding-agent vendors** (Cursor, Claude Code, Devin, Copilot agent mode) | The agent | **None** — they do not contain their own execution | No | Seat-based | n/a |
-| **BRZ** | Control plane + evidence for contained agent execution | Linux namespaces (**bubblewrap**: user, mount, PID, net) + cgroup v2 + rlimits, **egress denied by default**, brokered with an allowlist and a full log | **Yes — on your own Vultr account, one command, no control plane to operate** | $99 / $499 / $3,000 per month + per-task overage | **$0.0274** |
+| **BRZ** | Control plane + evidence for contained agent execution | **Tier 1 (shipping now)** — Linux namespaces (**bubblewrap**: user, mount, PID, net) + cgroup v2 + rlimits, **egress denied by default**, brokered with an allowlist and a full log. **Tier 2 (Nov 2026)** — a per-task throwaway Vultr VM with its own kernel boundary. **Tier 3 (2027)** — microVM-grade isolation (`Firecracker` / `Kata`) behind the same `SandboxProvider` interface. | **Yes — on your own Vultr account, one command, no control plane to operate.** Enterprise tier: a **dedicated tenancy** on that account, inside your network boundary | $99 / $499 / $3,000 per month + per-task overage. The $3,000 tier is sold on **tenancy, volume (15,000 tasks/mo), retention (365 days), evidence export and a signed SLA** — *not* on a certification | **$0.0274** |
 
 > **Column basis:** one 1-hour agent session at 2 vCPU / 4 GiB **reserved**, 30% CPU busy. Figures for E2B, Daytona, Modal, Vercel, Cloudflare and Fly.io are Fly.io's own published table (Oct 2026); AWS, Docker, Lizard and BRZ are our arithmetic on those providers' published per-unit rates, using the same method. `derived`
 >
 > **The BRZ line is the whole argument of §C.1 in one number: $0.0274 vs $0.06–$0.24.** We are 2.2× cheaper than Fly.io on reserved session compute and 8.8× cheaper than Modal, because a namespace on a commodity virtual machine is a cheaper isolation primitive than a microVM product. The managed vendors are not being stupid; they are selling a different thing, and they charge for it.
+
+**The isolation ladder — where BRZ sits today, and the dated path off the weakest rung.** This is the honest version of the isolation axis in §C.3: we are on Tier 1 today, and the ladder is published, dated, and matches ARCHITECT's `SandboxProvider` design (`docs/architecture/02-phase1-design.md` §4).
+
+| Tier | Isolation | Status / date | What it changes |
+|---|---|---|---|
+| **Tier 1** | Linux namespaces (**bubblewrap**: user, mount, PID, net) + cgroup v2 + rlimits, **egress denied by default** | **Shipping now** (Phase 1) | The product as it exists today. A namespace shares the host kernel, so a kernel exploit is a host problem. **This is the rung we lose on today** — and the only rung we are actually on. |
+| **Tier 2** | **Per-task throwaway Vultr VM** — a full VM, its own kernel boundary, one per task, destroyed after it | **Nov 2026**, at the Vultr kickoff | Moves production execution off the shared host kernel onto a dedicated VM per task, still on the customer's own account and still behind the same control plane. |
+| **Tier 3** | **microVM-grade isolation** (`Firecracker` / `Kata`) | **2027** | Kernel-level parity with the managed vendors, behind the same `SandboxProvider` interface. Closes the isolation axis — the one axis where a competitor beats us. |
+
+> **This is a dated path, not a permanent gap.** Tier 2 lands in **November 2026** — weeks after this document was written — and Tier 3 follows in **2027**. We are on the weakest rung **today**; the ladder is the answer, and it is dated. `derived` from ARCHITECT §4 and the §E.4.1 roadmap.
+
+**How the $3,000 tier beats a managed vendor without a certification.** A judge will ask why anyone pays $3,000/month to a five-day-old project when E2B's Enterprise tier starts at the same $3,000 and carries SOC 2, HIPAA and SSO. The honest answer is that we are **not** competing on those:
+
+| | E2B Enterprise (and Modal, Vercel, AWS) | BRZ Enterprise |
+|---|---|---|
+| Where the sandbox runs | **Their cloud.** Your code, your agent context, their infrastructure. | **Your own Vultr account**, a dedicated tenancy, inside your network boundary. |
+| Certification | SOC 2 / HIPAA / SSO on the platform | **None.** We say so. |
+| What you get on top | A managed sandbox, fast cold starts, global scale | 15,000 included tasks/mo, a **signed support SLA**, and **the per-run containment report** (§C.2 #1) — plus org-level 365-day retention (Mar 2027) and auditor-form evidence export (Apr 2027), both dated roadmap (§E.4.1) |
+| Cost of the sandbox itself | $0.16–$0.24 per session-hour (E2B $0.17 · Vercel $0.16 · AWS $0.22 · Modal $0.24); $0.06–$0.24 across all managed vendors | $0.0274 per session-hour on your own VM |
+
+**So the Enterprise tier is not for the buyer who needs a certificate. It is for the buyer who needs their own boundary, their own evidence, and their own infrastructure — and who is willing to wait for, or live without, the certificate.** The regulated segment (§A.4 segment 2) is the motion that is **deferred** by our missing certifications, not the tier itself. `derived`
 
 ### C.2 — Containment differentiation: where BRZ is genuinely better, and where it is honestly worse (§9)
 
@@ -376,10 +476,10 @@ Isolation model, whether it runs on your infrastructure, and the pricing shape. 
 
 | # | Where BRZ is worse | How bad | Confidence |
 |---|---|---|---|
-| 1 | **The isolation primitive is weaker.** BRZ uses Linux namespaces (bubblewrap) + cgroup v2 + rlimits. A Firecracker or Kata microVM has **its own kernel**; a namespace shares the host kernel, so a kernel exploit is a host problem. | **This is the most serious weakness in the product and we do not argue around it.** E2B, Docker, AWS, Vercel and Fly.io all use microVMs. If your threat model is a hostile kernel exploit rather than a buggy agent, BRZ is the wrong product today. | `derived` |
-| 2 | **We have no certifications.** No SOC 2, no ISO 27001, no HIPAA BAA, no signed DPA. Competitors have them: Modal (SOC 2, HIPAA, audit logs, SSO on Enterprise), E2B (SOC 2), Browserbase (SOC 2, HIPAA, DPA, SSO), Lizard (SOC 2 "coming soon"). | **This will block enterprise deals outright.** It is the single biggest gap between us and the Enterprise tier we are pricing at $3,000/month. | `sourced` |
+| 1 | **The isolation primitive is weaker.** BRZ uses Linux namespaces (bubblewrap) + cgroup v2 + rlimits. A Firecracker or Kata microVM has **its own kernel**; a namespace shares the host kernel, so a kernel exploit is a host problem. | **This is the most serious weakness in the product and we do not argue around it.** E2B, Docker, AWS, Vercel and Fly.io all use microVMs. If your threat model is a hostile kernel exploit rather than a buggy agent, BRZ is the wrong product today. **The path off this rung is dated, not imaginary: Tier 2 (a per-task throwaway Vultr VM with its own kernel boundary) in Nov 2026, Tier 3 (microVM-grade) in 2027** — the ladder in §C.1, the roadmap in §E.4.1. **Until Tier 2 ships, the weakness is real.** | `derived` |
+| 2 | **We have no certifications.** No SOC 2, no ISO 27001, no HIPAA BAA, no signed DPA. Competitors have them: Modal (SOC 2, HIPAA, audit logs, SSO on Enterprise), E2B (SOC 2), Browserbase (SOC 2, HIPAA, DPA, SSO), Lizard (SOC 2 "coming soon"). | **This defers the regulated segment and lengthens the sales cycle; it does not block the Enterprise tier.** A regulated buyer's procurement checklist will stall on a certificate we do not have, and that is a real, priced cost. But the $3,000 tier is sold on **tenancy, volume, retention, export and SLA** (§D.1, §B.1) — all of which we ship without a certificate — so it is sellable today to a platform team that wants its own boundary, its own evidence and someone to call. **This remains the single biggest gap between us and the regulated sub-segment** (§A.4, $145.3M/yr), which is why that motion is scheduled late and why the roadmap treats certification as a **costed, budget-flagged plan** (§E.4.1), not as a given. | `sourced` |
 | 3 | **No scale, no multi-region, no cold-start engineering.** Our cold start is a Vultr VM's cold start. Fly.io and Cloudflare compete on sub-100 ms; we do not compete on that axis at all. | Blocks the high-concurrency browser and CI-burst workloads. It does not block a 40-customer business. | `derived` |
-| 4 | **No multi-tenancy, no SSO, no RBAC, no session isolation between customers.** | Blocks the Enterprise tier today. On the roadmap (§E.4.1). | `derived` |
+| 4 | **No multi-tenancy, no SSO, no RBAC, no session isolation between customers.** | **It blocks the shared multi-tenant SaaS model, and it is a procurement question on the dedicated one.** A dedicated deployment — one BRZ install on one customer's own Vultr account — has no cross-customer isolation problem by construction, which is why the Enterprise tier can be sold on **tenancy** today (§D.1). But SSO and RBAC *inside* that deployment land with the Mar 2027 control-plane milestone (§E.4.1), and a security reviewer will ask about it on the first call. It slows the deal; it does not make the tier incoherent. | `derived` |
 | 5 | **One provider, one region, one cloud.** Vultr only. Every serious buyer in segment 1 and every regulated buyer will ask for AWS, GCP, or on-prem. | This is the highest-value gap in the roadmap and the one that most constrains the Enterprise tier. | `derived` |
 | 6 | **No GPU, no browser, no image, no mature SDK.** Our Phase 1 is a standard-library Python sandbox. | Fine for code execution. Not fine for a browser workload. | `derived` |
 | 7 | **We are 5 days old.** No track record, no support organisation, no SLA, no reference customer, no incident history — and a brand-new public repository that a security reviewer will read with suspicion. | **The hardest weakness to engineer away, and the one the pitch must address head-on (§F.1).** | `derived` |
@@ -421,13 +521,13 @@ L  └────────────────────────�
 
 | Axis | Who wins | By how much | Do we deny it? |
 |---|---|---|---|
-| **Kernel-level isolation strength** | **Firecracker / Kata microVMs** — E2B, Docker, AWS, Vercel, Fly.io | A microVM has its own kernel; a namespace shares the host's. Not a close comparison. | **No. We lose this outright today.** It is the top roadmap item (§E.4.1). |
-| **Certification and procurement readiness** | **Modal, E2B, Browserbase, AWS** | Years of audits vs. zero. | **No.** It is the single largest gap blocking the Enterprise tier. |
+| **Kernel-level isolation strength** | **Firecracker / Kata microVMs** — E2B, Docker, AWS, Vercel, Fly.io | A microVM has its own kernel; a namespace shares the host's. Not a close comparison. | **No. We lose this today** — we are on Tier 1 (namespaces). **The dated path to parity: Tier 2, a per-task throwaway Vultr VM with its own kernel boundary, in Nov 2026; Tier 3, microVM-grade, in 2027** (§C.1 ladder, §E.4.1). We lose the axis, not the argument. |
+| **Certification and procurement readiness** | **Modal, E2B, Browserbase, AWS** | Years of audits vs. zero. | **No.** It is the single largest gap, and it **defers the regulated segment and lengthens the enterprise cycle**. It does **not** block the $3,000 tier, which is sold on **tenancy, volume, retention, export and SLA** (§D.1). Our certification roadmap rows are costed and budget-flagged (§E.4.1). |
 | **Scale, cold start, and concurrency** | **Fly.io, Cloudflare, AWS** | Sub-100 ms cold starts, global edge, 50,000+ concurrent sessions. | **No.** We are not competing on this axis and should not pretend to be. |
 
 **The slide, in one line each — for a judge who reads left to right:**
 
-> *E2B gives you a microVM. We give you a microVM-shaped answer to a different question — "prove it could not reach anything else" — on infrastructure you already pay for, with a document your auditor accepts. Docker's AI Governance is the closest thing to us and is priced on request. AWS will bundle this into AgentCore and eventually win the default. Our window is the 18 months between the incident wave and the hyperscalers' governance layer shipping.*
+> *E2B gives you a microVM. We give you **the document your auditor accepts** — on your own infrastructure, on a dated ladder to microVM-grade isolation. Docker's AI Governance is the closest thing to us and is priced on request. AWS will bundle this into AgentCore and eventually win the default. Our window is the 18 months between the incident wave and the hyperscalers' governance layer shipping.*
 
 ---
 
@@ -443,8 +543,12 @@ L  └────────────────────────�
 |---|---:|---:|---:|---|---:|
 | **Starter** | **$99 / mo** | 500 | $0.05 | 5–15 developer teams; CI; evaluation | $1,188 |
 | **Team** | **$499 / mo** | 2,000 | $0.08 | Platform / AI-enablement teams; audit log, reports, policy engine | $5,988 |
-| **Enterprise (self-hosted, your Vultr account)** | **$3,000 / mo** | 15,000 | $0.06 | CISO sign-off; SSO, RBAC, 365-day retention, evidence export, SLA | $36,000 |
+| **Enterprise (self-hosted, your Vultr account)** | **$3,000 / mo** | 15,000 | $0.06 | Platform / security team that wants its own boundary: **dedicated tenancy on your own Vultr account**, inside your network boundary · 15,000 included tasks/mo · org-level 365-day audit-log retention · evidence export in an auditor-acceptable form · **signed support SLA**. **Not sold on a certification — we have none.** | $36,000 |
 | **Community / OSS** | $0 | unlimited, self-hosted | $0 | Adoption driver; the repo is the funnel | $0 |
+
+> **The Enterprise tier is sold on tenancy, volume, retention, export, and SLA — not on certifications.** We do not have SOC 2, ISO 27001 or a HIPAA BAA (§C.2 weakness #2), and no part of this tier depends on having one. Certifications are a **later unlock** (§E.4.1), not a prerequisite.
+>
+> **What the $3,000 buys on day one, and what is dated roadmap** — stated so nobody is surprised at renewal: **dedicated tenancy on the customer's own Vultr account, the 15,000-task allowance, and the signed support SLA** are part of the product as it stands. **Organisation-level 365-day retention (Mar 2027)** and **evidence export in an auditor-acceptable form (Apr 2027)** are dated roadmap items in §E.4.1, and a customer signing before those dates should expect to wait for them. We would rather write that here than have it discovered in month nine. `derived`
 
 **Justification against the alternatives from §C.1 — the price is set by what we replace, not by what we cost:**
 
@@ -621,10 +725,10 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 | 3 | **The solution** | 0:55–1:32 | 37s | One diagram, four properties: sealed / no keys / hard limits / destroyed after each task. The provider is chosen by three lines of a config file — say it, it is a differentiator. | Solution |
 | 4 | **⭐ THE CONTAINMENT MOMENT** | **1:32–2:20** | **48s** | **The single longest segment, and the only one shot as a continuous live screen recording.** See the beat sheet below. | **Vultr C1 submission requirement** — *"show one containment moment"* |
 | 5 | **The evidence** | 2:20–2:50 | 30s | The blast-radius report on screen: what executed, what was denied, resource usage against caps, the audit trail. One sentence: *"This is the document your reviewer signs."* | Value proposition |
-| 6 | **The market** | 2:50–3:20 | 30s | Bottom-up: 225M GitHub devs → 26.2% in agent-workflow orgs → 259,921 orgs → 24% policy-gated → **62,381** → **$396M/yr beachhead**, **$1.65B/yr TAM**. Cross-check: 3.6–4.0% of Gartner's $9.8–11.0B. | **Market analysis** (Presentation 4/5 gate) |
+| 6 | **The market** | 2:50–3:20 | 30s | Bottom-up chain, ending at the beachhead: 225M GitHub accounts → 11.9M professional devs → 26.2% in agent-workflow orgs → 259,921 orgs → 24% policy-gated → **62,381** → **$396M/yr beachhead**. **TAM $1.65B/yr is the upside if the policy gate loosens** — one clause, after the beachhead, never before it. Cross-check: 3.6–4.0% of Gartner's $9.8–11.0B. | **Market analysis** (Presentation 4/5 gate) |
 | 7 | **The revenue** | 3:20–3:48 | 28s | The three price tiers. The unit explained in one breath: *"one contained task."* Then the honest bit: **$0.026 cost per task, 84% margin, break-even at 28 customers — and Starter-only never breaks even.** | **Marketing revenue** (Presentation 4/5 gate) |
 | 8 | **The competition** | 3:48–4:05 | 17s | The 2×2 (§C.3) — one slide, no animation. Name Docker AI Governance, E2B, AWS AgentCore, and Judge0 out loud. Then: *"They give you a microVM. We give you the document your auditor accepts."* | **Competitive analysis** (Presentation 5/5 line) |
-| 9 | **Future plans** | 4:05–4:28 | 23s | Dated: Dec 2026 SOC 2 Type I readiness · Feb 2027 microVM tier · Mar 2027 SSO + RBAC · Jun 2027 second cloud provider · Sep 2027 SOC 2 Type II issued and 3 enterprise customers. | **Future goals and plans** (Presentation 4/5 gate) |
+| 9 | **Future plans** | 4:05–4:28 | 23s | **Spoken (23s):** *"Dated, and ours to control: our own VM per task in November. MicroVM-grade isolation in February. SSO and role-based access in March. A second sandbox provider in June. And the one thing we will not pretend — certification is a costed plan, not a promise: SOC 2 Type I scoped for December, roughly ten thousand dollars, pending budget approval."* **Slide body:** the full dated roadmap, including evidence export (Apr 2027) and SOC 2 Type II (Sep 2027 — $15.5k–$50k plus $20k–$60k of engineering time, **also unfunded**). | **Future goals and plans** (Presentation 4/5 gate) |
 | 10 | **Close** | 4:28–4:40 | 12s | "A security team can approve a report. We cannot yet be trusted on a promise. So start with a repository you do not care about — and read the report." + URL and repo. | Close |
 | | **TOTAL** | **0:00–4:40** | **4:40** | | 20s of slack to 5:00 |
 
@@ -642,20 +746,27 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 
 ### E.4 — Future goals and plans, dated (§18)
 
-> **Commercial and company arc.** ARCHITECT supplies the technical roadmap; this is the commercial half. Dated, concrete, and falsifiable. Two of these are **revenue-gated** — we will not claim them if the previous one did not happen.
+> **Commercial and company arc.** ARCHITECT supplies the technical roadmap; this is the commercial half. Dated, concrete, and falsifiable. Two of these are **revenue-gated** — we will not claim them if the previous one did not happen. **Every certification milestone carries a sourced cost band and an explicit `requires budget approval — not currently funded` flag** — a date we have not paid for is a plan, and it is labelled as one.
 
 #### E.4.1 — Product and trust milestones
 
-| Date | Milestone | Why it is on this list |
-|---|---|---|
-| **Dec 2026** | Public deployment on Vultr; live demo URL; **SOC 2 Type I readiness** (not the report — readiness). | Type I is the cheap first step. It is also the answer to §F.1: an auditor's opinion is a credential you cannot fake. |
-| **Jan 2027** | Container image build pipeline + signed provenance for every sandbox template; publish a transparency log. | Lets a security reviewer verify *what* ran, not just *that* it ran. |
-| **Feb 2027** | MicroVM tier (`Firecracker` or `Kata`) behind the same `SandboxProvider` interface, so BRZ stops being the weaker-isolation option. | **Closes weakness #1 from §C.2.** This is the single highest-value engineering item for the Enterprise tier. |
-| **Mar 2027** | Multi-tenant control plane, SSO (SAML), RBAC, per-organisation audit-log retention. | Closes weakness #4. Enterprise tier is unsellable without it. |
-| **Apr 2027** | Evidence export in a form an auditor accepts (signed run manifest, hash-chained event log). | Turns the report from a UI screen into an artifact. |
-| **Jun 2027** | Second sandbox provider (AWS) behind the same interface; BYOC inference keys. | Closes weakness #5, and drops variable cost from $0.0257 to $0.0037. |
-| **Sep 2027** | SOC 2 Type II report issued. | Closes weakness #2. The gate for real enterprise procurement. |
-| **Oct 2027** | Policy-as-code engine: a run that violates a policy is **stopped**, not merely reported. | Moves from "detecting" to "preventing" — the Cyera recommendation, fifth control. |
+> **How to read the funding column.** Rows that need an external certificate carry a **sourced cost band** and the flag **`requires budget approval — not currently funded`**. A certification date with no money behind it is a *plan*, not a commitment, and it is labelled as one. Nothing else in this document implies we have the budget.
+
+| Date | Milestone | Cost and funding status | What it unlocks — why it is on this list |
+|---|---|---|---|
+| **Nov 2026** | **Tier 2 — per-task throwaway Vultr VM.** A full VM with its own kernel boundary, one per task, destroyed after it, behind the same `SandboxProvider` interface. Live on the customer's own Vultr account at the Vultr kickoff (3 Nov 2026). | Infrastructure cost of the deployment — **no certificate, no licence fee** | Moves production execution off the shared host kernel and onto a dedicated VM per task. **This is the rung that stops us being the weakest-isolation option in production**, and it is the first step on the ladder in §C.1. |
+| **Dec 2026** | Public deployment on Vultr; live demo URL. **SOC 2 Type I — scoped, not reported:** the audit engagement is engaged and the control evidence is built. | **$7,000–$15,000** audit fee. **Requires budget approval — not currently funded.** | A scoped, dated Type I engagement is the first line on a procurement checklist and the cheapest step toward Type II. **It is a plan with a price, not a promise: if the budget is not approved, the date moves, and we will say so rather than quietly miss it.** |
+| **Jan 2027** | Container image build pipeline + signed provenance for every sandbox template; publish a transparency log. | Engineering time — no external spend | Lets a security reviewer verify *what* ran, not just *that* it ran. |
+| **Feb 2027** | **Tier 3 — microVM-grade isolation** (`Firecracker` or `Kata`) behind the same `SandboxProvider` interface. | Engineering time; the primitives are **open source, so no per-seat licence cost** | **Closes weakness #1 in §C.2 and wins the kernel-level isolation axis in §C.3** — but only *after* Tier 2 has already landed in Nov 2026. The isolation axis improves on a **dated path**; it is not a permanent loss. |
+| **Mar 2027** | Multi-tenant control plane, SSO (SAML), RBAC, per-organisation audit-log retention. | Engineering time — no external spend | Closes weakness #4. The Enterprise tier's **retention** promise depends on it — which is why §D.1 states plainly what ships on day one and what is dated roadmap. |
+| **Apr 2027** | Evidence export in a form an auditor accepts (signed run manifest, hash-chained event log). | Engineering time — no external spend | Turns the report from a UI screen into an artifact. The Enterprise tier's **export** promise depends on it. |
+| **Jun 2027** | Second sandbox provider (AWS) behind the same interface; BYOC inference keys. | Engineering time — no external spend | Closes weakness #5, and drops variable cost from $0.0257 to $0.0037. |
+| **Sep 2027** | **SOC 2 Type II — report issued.** | **$15,500–$50,000** audit fee, **plus $20,000–$60,000 of internal engineering time** — year-1 all-in band **$50,000–$150,000** for a 50-person team. **Requires budget approval — not currently funded.** | Closes weakness #2 and unlocks the **regulated sub-segment** (§A.4, $145.3M/yr) — the segment that is deferred today precisely because this certificate does not exist. **It is a costed plan. The date is a target, not an entitlement.** |
+| **Oct 2027** | Policy-as-code engine: a run that violates a policy is **stopped**, not merely reported. | Engineering time — no external spend | Moves from "detecting" to "preventing" — the Cyera recommendation, fifth control. |
+
+> **Funding status of this table as a whole, stated honestly.** Only the two certification rows carry a quoted external cost, because they are the only rows that need cash we cannot create ourselves. The remaining rows are **engineering time from a two-person team** — a real cost, and also not budgeted. The honest statement is: **this is a roadmap for a funded team, and every date in it is a target, not an entitlement.** What makes it credible is not the dates; it is that each one is dated, bounded, and checkable, and that we have said out loud which ones we have not paid for.
+
+> **The isolation ladder, in one place:** **Tier 1** namespaces + cgroups (shipping now) → **Tier 2** per-task throwaway Vultr VM (**Nov 2026**) → **Tier 3** microVM-grade isolation (**Feb 2027**). Same ladder, same dates as §C.1 and §C.3.
 
 #### E.4.2 — Commercial milestones
 
@@ -668,7 +779,7 @@ BRZ sits **below** a Docker Business seat and **far below** a Copilot Max seat o
 | **Jun 2027** | **First Enterprise customer** on a self-hosted Vultr account. | 1 signed annual contract ≥ $36,000 | **Yes — the milestone that decides the business** |
 | **Sep 2027** | 3 Enterprise customers; **operating break-even** (§D.4). | $15,894+ monthly contribution | Yes |
 | **Oct 2027** | Month-12 exit run-rate of **$245,676 ARR**, 40 customers, 565,500 contained tasks over the year. | MRR $20,473 | Yes |
-| **Jan 2028** | SOC 2 Type II + 10 Enterprise customers; begin the 2028 outbound motion into financial services. | — | Yes |
+| **Jan 2028** | **SOC 2 Type II in force** (assuming the Sep 2027 report lands — costed at $15,500–$50,000 audit fee plus $20,000–$60,000 of internal engineering time; **requires budget approval — not currently funded**) + 10 Enterprise customers; begin the 2028 outbound motion into financial services. | — | Yes |
 
 #### E.4.3 — The validation plan (because there is no traction)
 
@@ -714,7 +825,7 @@ Listed weakest-first, as the brief requires.
 
 | # | What we do not claim | Why it is weak | What would fix it |
 |---|---|---|---|
-| 1 | **That the TAM of $1.65B/yr is right.** | It rests on an assumed average org size of 12 developers and a US-derived accounts-per-professional ratio applied globally. Both could move the number by 2× in either direction. | Sizing from a paid, primary dataset (e.g. a licensing survey of engineering orgs) rather than a chain of public proxies. |
+| 1 | **That the TAM of $1.65B/yr is right.** | It rests on an assumed average org size of 12 developers and a US-derived accounts-per-professional ratio applied globally. Both could move the number by 2× in either direction. **It was also deliberately demoted from the headline of §0 on the coordinator's instruction (2026-10-23)**, because it is the weakest claim in this document; the beachhead is now the headline (§A.5). **The 12-developer assumption is inherited by the beachhead too** — demoting the TAM changed which claim leads, not which assumptions are in the chain. | Sizing from a paid, primary dataset (e.g. a licensing survey of engineering orgs) rather than a chain of public proxies. |
 | 2 | **That the beachhead filter of 24% is stable.** | It comes from one survey's self-report of whether an employer has an "official AI policy or published approved tools" — a loose proxy for "will buy containment." | A 25-question instrument run against 100 real platform leaders. |
 | 3 | **That the $0.0257 variable cost holds at scale.** | Inference is 86% of it, and inference price per task depends on the model, the context length, and the retry rate — none of which we have measured, because we have not run a real task in production. | 1,000 real contained tasks on Vultr Serverless Inference, with token counts logged per run. |
 | 4 | **That the 12-month ramp will happen.** | It is a plan. It assumes a two-person team closes 40 customers in 12 months from zero, which is the least certain number in this document. | Three design partners with signed conversion intent, then a real pipeline. |
@@ -725,7 +836,11 @@ Listed weakest-first, as the brief requires.
 | 9 | **That BRZ is worth $245,676 ARR.** | There is no revenue, no customer, no contract, and no team beyond two people. The number is a projection of a projection. | The projection becoming a transaction. |
 | 10 | **That we have a moat.** | We do not. The containment model is a design, not a patent, and the open-source primitives we build on are free. Our defensibility is the *evidence format* and the *compliance posture* — if we execute. | Shipping a report format that a reviewer accepts, then getting certified. |
 | 11 | **Any of this is traction.** | There is none. | — |
-| 12 | **That the workload is code execution.** | It is not chosen. §0.5 gives the range: browser automation shrinks the beachhead to ~28,000 orgs (~$178M/yr); research shrinks it to ~37,000 (~$238M/yr). | The coordinator's decision. |
+| 12 | **That the chosen workload (`self-healing-runner`) is the right one.** | It is now decided (`docs/architecture/02-phase1-design.md` §2.1), and the decision happens to match the column this document is sized on — so these numbers are the **favourable** case, not the neutral one. §0.5 still holds: browser automation would shrink the beachhead to ~28,000 orgs (~$178M/yr) and research to ~37,000 (~$238M/yr). | A pilot of each alternative workload on the same infrastructure, to see whether the isolation, evidence and price requirements hold. |
+
+---
+
+> **Note on the demotion of the TAM (2026-10-23, revision 2).** The $1.65B TAM was the headline of §0.1 in revision 1 and is now entry #10, with the **62,381-organisation / $396.1M beachhead** in front of it. The reason is recorded in §A.5 and in item 1 above: the TAM is not merely larger, it is **wrong in composition** — it counts the ~120,000 AI-native startups this document itself calls a segment with "no budget for a control plane" — while the beachhead is the same arithmetic with one sourced filter applied. **The TAM was demoted, not deleted.** It is still in the headline table, still labelled `derived (low)`, still cross-checked in §A.3, still on the market slide as the upside clause, and still the first entry in this section because it remains the weakest claim we make.
 
 ---
 

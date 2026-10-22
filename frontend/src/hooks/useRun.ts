@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { BrzApi } from '../lib/api.ts';
-import { ApiError } from '../lib/api.ts';
-import type { BlastRadiusReport, RunDetail, RunEvent, RunStatus } from '../lib/types.ts';
-import { errored, loading, ready } from '../lib/state.ts';
-import type { AsyncState } from '../lib/state.ts';
+import type { BrzApi } from '../lib/api';
+import { ApiError } from '../lib/api';
+import type { BlastRadiusReport, RunDetail, RunEvent, RunStatus } from '../lib/types';
+import { errored, loading, ready } from '../lib/state';
+import type { AsyncState } from '../lib/state';
 
 /**
  * One run, its live event stream, and its report.
@@ -46,13 +46,19 @@ export function useRun(runId: string | null, api: BrzApi): UseRunResult {
   const cursor = useRef(0);
   const accumulated = useRef<RunEvent[]>([]);
   const reportSealed = useRef(false);
+  // A response that arrives after the transport changed belongs to a previous
+  // generation and is discarded, so a stale request cannot overwrite a fresh
+  // one.
+  const generation = useRef(0);
 
   const load = useCallback(
     async (scheduleNext: boolean) => {
       if (runId === null || inFlight.current) return;
       inFlight.current = true;
+      const current = generation.current;
       try {
         const detail = await api.getRun(runId);
+        if (current !== generation.current) return;
         let stream: { events: readonly RunEvent[] } = { events: [] };
         try {
           stream = await api.listEvents(runId, cursor.current === 0 ? undefined : cursor.current);
@@ -60,6 +66,7 @@ export function useRun(runId: string | null, api: BrzApi): UseRunResult {
           // A transient failure to read the stream must not lose the run.
           stream = { events: [] };
         }
+        if (current !== generation.current) return;
         if (stream.events.length > 0) {
           accumulated.current = [...accumulated.current, ...stream.events];
           const last = stream.events[stream.events.length - 1];
@@ -71,9 +78,11 @@ export function useRun(runId: string | null, api: BrzApi): UseRunResult {
         if (isTerminal(detail.run.status) && !reportSealed.current) {
           try {
             const response = await api.getReport(runId);
+            if (current !== generation.current) return;
             reportSealed.current = true;
             setReport(ready(response.report));
           } catch (cause) {
+            if (current !== generation.current) return;
             if (cause instanceof ApiError && cause.code === 'report_not_ready') {
               setReport({ kind: 'not-ready' });
             } else {
@@ -89,6 +98,7 @@ export function useRun(runId: string | null, api: BrzApi): UseRunResult {
           }, POLL_INTERVAL_MS);
         }
       } catch (cause) {
+        if (current !== generation.current) return;
         setState(errored(toApiError(cause)));
       } finally {
         inFlight.current = false;
@@ -117,6 +127,8 @@ export function useRun(runId: string | null, api: BrzApi): UseRunResult {
   }, [api, refresh, runId]);
 
   useEffect(() => {
+    generation.current += 1;
+    inFlight.current = false;
     cursor.current = 0;
     accumulated.current = [];
     reportSealed.current = false;

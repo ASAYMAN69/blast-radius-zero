@@ -1,4 +1,4 @@
-import type { BlastRadiusVerdict, RunPhase, RunStatus } from '../lib/types.ts';
+import type { BlastRadiusVerdict, RunPhase, RunStatus } from '../lib/types';
 
 /**
  * The small vocabulary of labels the console shows.

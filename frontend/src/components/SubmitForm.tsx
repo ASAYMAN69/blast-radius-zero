@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import type { ApiError } from '../lib/api.ts';
-import type { RunSource, SubmitRunRequest, WorkloadDescriptor, WorkloadFixture } from '../lib/types.ts';
+import type { ApiError } from '../lib/api';
+import type { RunSource, SubmitRunRequest, WorkloadDescriptor, WorkloadFixture, WorkloadId } from '../lib/types';
 
 /**
  * The submit screen for the Phase 1 workload.
@@ -35,9 +35,9 @@ export interface SubmitFormProps {
 }
 
 interface FieldErrors {
-  readonly task?: string;
-  readonly source?: string;
-  readonly files?: string;
+  task?: string;
+  source?: string;
+  files?: string;
 }
 
 function validatePath(path: string): string | null {
@@ -127,7 +127,10 @@ export function SubmitForm({ workload, fixtures, onSubmit, submitting, error }: 
     if (submitting) return;
     const { ok, source } = validate();
     if (!ok || source === null || workload === null) return;
-    await onSubmit({ workload: workload.id, task: task.trim(), source });
+    // The workload descriptor reports its id as a string; the request type
+    // narrows it to the one workload Phase 1 ships. The server is the
+    // authority — an unknown id is rejected there with `invalid_workload`.
+    await onSubmit({ workload: workload.id as WorkloadId, task: task.trim(), source });
   };
 
   const addFile = () => {
@@ -163,15 +166,19 @@ export function SubmitForm({ workload, fixtures, onSubmit, submitting, error }: 
           </div>
           <div className="infobox__row">
             <span className="infobox__label">Agent tools</span>
-            <span className="infobox__value mono mono--inline">
-              {workload.tools.map((tool) => tool.name).join(' · ')}
+            <span className="infobox__value">
+              <span className="mono mono--inline">
+                {workload.tools.map((tool) => tool.name).join(' · ')}
+              </span>
             </span>
           </div>
           {selectedFixture !== null && (
             <div className="infobox__row">
               <span className="infobox__label">Allowed commands</span>
-              <span className="infobox__value mono mono--inline">
-                {selectedFixture.allowedCommands.join(' · ')}
+              <span className="infobox__value">
+                <span className="mono mono--inline">
+                  {selectedFixture.allowedCommands.join(' · ')}
+                </span>
               </span>
             </div>
           )}
