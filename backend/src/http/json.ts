@@ -6,7 +6,7 @@
  * code — never a 500.
  */
 
-import type { IncomingMessage } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { ApiError } from './errors.ts';
 
 /** Phase 1 request bodies are small: a goal plus a few source files. */
@@ -81,4 +81,22 @@ export async function readJsonObject(
     throw new ApiError('invalid_request', [{ field: 'body', issue: 'The body must be a JSON object.' }]);
   }
   return parsed as Record<string, unknown>;
+}
+
+/**
+ * Write a JSON response. Every response carries `X-Request-Id` (§8.5) and is
+ * never cached: runs and reports change under the console's feet.
+ */
+export function sendJson(
+  res: ServerResponse,
+  status: number,
+  body: unknown,
+  requestId: string,
+): void {
+  const payload = JSON.stringify(body);
+  res.statusCode = status;
+  res.setHeader('content-type', 'application/json; charset=utf-8');
+  res.setHeader('x-request-id', requestId);
+  res.setHeader('cache-control', 'no-store');
+  res.end(payload);
 }

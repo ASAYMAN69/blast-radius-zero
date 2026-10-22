@@ -19,7 +19,7 @@ import type { ChatMessage, ChatResponse, ChatToolCall } from '../inference/types
 import { InferenceAbortedError, InferenceError } from '../inference/client.ts';
 import type { Logger } from '../log.ts';
 import { buildStartingMessage, buildSystemPrompt } from './prompt.ts';
-import type { ToolCallOutcome, ToolDispatcher } from './tools.ts';
+import type { ToolCallOutcome, ToolDispatch } from './tools.ts';
 import { TOOL_DEFINITIONS, isGreen, toTestOutcome } from './workload.ts';
 
 export interface AgentLimits {
@@ -63,14 +63,18 @@ export type EmitEvent = (
 
 export interface AgentLoopOptions {
   readonly client: InferenceClient;
-  readonly dispatcher: ToolDispatcher;
+  readonly dispatcher: ToolDispatch;
   readonly fixture: WorkloadFixture;
   readonly goal: string;
   readonly limits: AgentLimits;
   readonly signal: AbortSignal;
   readonly emit: EmitEvent;
   /** Persists one tool call under its per-run ordinal. */
-  readonly recordToolCall: (seq: number, outcome: ToolCallOutcome) => void;
+  readonly recordToolCall: (
+    seq: number,
+    outcome: ToolCallOutcome,
+    toolArguments: Readonly<Record<string, unknown>>,
+  ) => void;
   readonly logger?: Logger;
 }
 
@@ -251,7 +255,7 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
       });
 
       const outcome = await dispatcher.dispatch(toolName, rawArguments);
-      recordToolCall(toolCalls, outcome);
+      recordToolCall(toolCalls, outcome, parsedArguments);
       emit('tool.result', 'executing', `${toolName}: ${outcome.ok ? 'ok' : 'error'}`, {
         name: toolName,
         ok: outcome.ok,
@@ -277,6 +281,20 @@ export async function runAgentLoop(options: AgentLoopOptions): Promise<AgentLoop
         );
         lastTestGreen = isGreen(lastTestOutcome);
         previousTestFailed = outcome.evidence.outcome !== 'ok';
+
+        /*
+         * §7.4: the test command runs at most `maxRepairs + 1` times (the
+         * initial run plus the repairs). When the budget is spent and the suite
+         * is still red, the run ends `repair_budget_exhausted` — the model does
+         * not get a fourth attempt.
+         */
+        if (previousTestFailed && repairsUsed >= limits.maxRepairs) {
+          emit('agent.message', 'executing', 'Repair budget exhausted', {
+            repairsUsed,
+            maxRepairs: limits.maxRepairs,
+          });
+          return finish('repair-budget-exhausted', 'repair_budget_exhausted', modelClaim);
+        }
       }
     }
   }

@@ -20,9 +20,13 @@ runs/
 sandbox-out/
 
 # Agent harness working files
-AGENTS/permissions/*/
+# The mailbox is transient agent-to-agent coordination and stays local.
 AGENTS/message/**/
 !AGENTS/message/README.md
+# Permission decisions are a permanent record per AGENTS/permissions/PROTOCOL.md
+# ("Decided requests stay in place as the record of what was granted and why"),
+# so they are published, not ignored.
+!AGENTS/permissions/
 
 # Operator tooling, not product — kept local, not published
 skills/

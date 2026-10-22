@@ -73,7 +73,14 @@ function matchSegments(
     const actual = target[index];
     if (expected === undefined || actual === undefined) return null;
     if (expected.startsWith(':')) {
-      params[expected.slice(1)] = decodeURIComponent(actual);
+      let decoded: string;
+      try {
+        decoded = decodeURIComponent(actual);
+      } catch {
+        // A malformed escape is not a route: the caller gets the normal 404.
+        return null;
+      }
+      params[expected.slice(1)] = decoded;
       continue;
     }
     if (expected !== actual) return null;

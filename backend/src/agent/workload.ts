@@ -228,6 +228,27 @@ export const SHR_SUM_RANGE: WorkloadFixture = {
   testCommand: TEST_COMMAND,
 };
 
+/**
+ * A submitted file set treated as a project. There is no fixture id; the run's
+ * `sourceRef` is the digest of the files (§9.3). The commands the workload
+ * declares are the same as the fixture's, because the command contract belongs
+ * to the workload, not to the upload.
+ */
+export function createFilesFixture(
+  files: readonly { readonly path: string; readonly content: string }[],
+): WorkloadFixture {
+  return {
+    id: 'files',
+    workload: WORKLOAD_ID,
+    name: 'Uploaded project',
+    description: 'A project submitted as a file set.',
+    task: '',
+    files,
+    allowedCommands: [TEST_COMMAND, SELFTEST_COMMAND],
+    testCommand: TEST_COMMAND,
+  };
+}
+
 const FIXTURES: readonly WorkloadFixture[] = [SHR_SUM_RANGE];
 
 export function listWorkloads(): readonly WorkloadDescriptor[] {

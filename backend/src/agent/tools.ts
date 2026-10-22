@@ -51,6 +51,17 @@ export interface ToolEvidence {
   readonly stderr: string;
   readonly outcome: 'ok' | 'non-zero-exit' | 'killed' | 'timed-out' | 'refused';
   readonly killReason: SandboxKillReason | null;
+  /**
+   * Set only by a successful `write_file`. The report needs the exact bytes and
+   * hash of what was written; recomputing from the redacted `arguments_json`
+   * would be wrong once a value is redacted or truncated (§9.5).
+   */
+  readonly written: { readonly path: string; readonly content: string } | null;
+}
+
+/** The structural seam the agent loop needs; `ToolDispatcher` implements it. */
+export interface ToolDispatch {
+  dispatch(rawName: string, rawArguments: string): Promise<ToolCallOutcome>;
 }
 
 export interface ToolDispatcherOptions {
@@ -274,10 +285,13 @@ export class ToolDispatcher {
     await writeFile(hostPath, content, { encoding: 'utf8', mode: 0o644 });
 
     const bytes = Buffer.byteLength(content, 'utf8');
-    return this.#success('write_file', `Wrote ${filePath} (${bytes} bytes).`, startedAt, {
-      bytes,
-      stdout: '',
-    });
+    return this.#success(
+      'write_file',
+      `Wrote ${filePath} (${bytes} bytes).`,
+      startedAt,
+      { bytes, stdout: '' },
+      { path: filePath, content },
+    );
   }
 
   async #runTests(args: Record<string, unknown>, startedAt: number): Promise<ToolCallOutcome> {
@@ -316,6 +330,7 @@ export class ToolDispatcher {
           stderr: '',
           outcome: 'refused',
           killReason: null,
+          written: null,
         },
       };
     }
@@ -376,6 +391,7 @@ export class ToolDispatcher {
         stderr,
         outcome,
         killReason: result.killReason,
+        written: null,
       },
     };
   }
@@ -385,6 +401,7 @@ export class ToolDispatcher {
     modelText: string,
     startedAt: number,
     data: { bytes: number; stdout: string },
+    written: { path: string; content: string } | null = null,
   ): ToolCallOutcome {
     return {
       name,
@@ -408,6 +425,7 @@ export class ToolDispatcher {
         stderr: '',
         outcome: 'ok',
         killReason: null,
+        written,
       },
     };
   }
@@ -435,6 +453,7 @@ export class ToolDispatcher {
         stderr: '',
         outcome: 'refused',
         killReason: null,
+        written: null,
       },
     };
   }

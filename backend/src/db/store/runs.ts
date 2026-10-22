@@ -169,6 +169,8 @@ export interface RunStore {
   get(runId: string): RunRow | null;
   list(cursor: RunCursor | null, limit: number): readonly RunRow[];
   update(runId: string, patch: RunPatch): void;
+  /** Runs that were left queued/running by a previous process. */
+  listActive(): readonly RunRow[];
 }
 
 export function createRunStore(db: Database): RunStore {
@@ -236,6 +238,15 @@ export function createRunStore(db: Database): RunStore {
       values.push(runId);
 
       stmt(`UPDATE runs SET ${assignments.join(', ')} WHERE id = ?`).run(...values);
+    },
+
+    listActive(): readonly RunRow[] {
+      const rows = stmt(
+        `SELECT * FROM runs
+          WHERE status IN ('queued', 'running')
+          ORDER BY created_at ASC`,
+      ).all() as unknown as RawRunRow[];
+      return rows.map(mapRun);
     },
   };
 }

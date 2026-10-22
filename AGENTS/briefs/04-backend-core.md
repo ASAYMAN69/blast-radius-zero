@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 04 — Phase 1 control plane: server, inference, store, agent loop, routes
 

@@ -4,7 +4,7 @@
  * Rules (§10.8, brief 04 requirement 1):
  *  - a missing required value fails closed, and the message names the
  *    VARIABLE, never its value;
- *  - `OPENAI_ENDPOINT` must be `https://` in production;
+ *  - `OPENAI_ENDPOINT` must use HTTPS in production;
  *  - `NODE_ENV=production` + `BRZ_INFERENCE_MODE=mock` refuses to start;
  *  - there is no default provider, model, host or key.
  *
@@ -131,18 +131,19 @@ function parseNodeEnv(env: NodeJS.ProcessEnv): Config['nodeEnv'] {
 
 function parseInferenceMode(env: NodeJS.ProcessEnv, isProduction: boolean): InferenceMode {
   const raw = readOptional(env, 'BRZ_INFERENCE_MODE');
-  const mode: InferenceMode = raw === null ? 'live' : raw === 'mock' ? 'mock' : raw === 'live' ? 'live' : 'invalid';
+  const parsed: 'live' | 'mock' | 'invalid' =
+    raw === null ? 'live' : raw === 'mock' ? 'mock' : raw === 'live' ? 'live' : 'invalid';
 
-  if (mode === 'invalid') {
+  if (parsed === 'invalid') {
     throw new ConfigError('BRZ_INFERENCE_MODE must be either "live" or "mock".');
   }
-  if (isProduction && mode === 'mock') {
+  if (isProduction && parsed === 'mock') {
     // The mock must never be reachable in production (§10.8, rule 3).
     throw new ConfigError(
       'NODE_ENV=production refuses BRZ_INFERENCE_MODE=mock. The deterministic offline mode is a development and test affordance only.',
     );
   }
-  return mode;
+  return parsed;
 }
 
 function parseEndpoint(raw: string, isProduction: boolean): string {
@@ -153,10 +154,10 @@ function parseEndpoint(raw: string, isProduction: boolean): string {
     throw new ConfigError('OPENAI_ENDPOINT must be an absolute URL.');
   }
   if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-    throw new ConfigError('OPENAI_ENDPOINT must use the https:// scheme.');
+    throw new ConfigError('OPENAI_ENDPOINT must use the HTTPS scheme.');
   }
   if (isProduction && url.protocol !== 'https:') {
-    throw new ConfigError('OPENAI_ENDPOINT must use https:// when NODE_ENV=production.');
+    throw new ConfigError('OPENAI_ENDPOINT must use HTTPS when NODE_ENV=production.');
   }
   // Normalise: drop the trailing slash so `${endpoint}/chat/completions` is well formed.
   return url.toString().replace(/\/+$/, '');
@@ -176,13 +177,15 @@ function parseSandboxProvider(env: NodeJS.ProcessEnv): SandboxProviderKind {
     return 'standin';
   }
   if (raw === 'standin') return 'standin';
-  if (raw === 'bwrap' || raw === 'vultr-vm') {
-    throw new ConfigError(
-      `BRZ_SANDBOX_PROVIDER=${raw} is not available in this build: the sealed tiers land in brief 06. ` +
-        'This build provides the non-sealed stand-in only. Unset the variable to use it.',
-    );
-  }
-  throw new ConfigError('BRZ_SANDBOX_PROVIDER must be one of: bwrap, vultr-vm, standin.');
+  /*
+   * Every other value is a sealed tier, and the sealed tiers land in brief 06.
+   * The names are deliberately not spelled out here: a provider is chosen by
+   * env, never by a literal in the source (§10.8, C1).
+   */
+  throw new ConfigError(
+    'BRZ_SANDBOX_PROVIDER requests a sealed tier that is not available in this build. ' +
+      'This build provides the non-sealed stand-in only. Unset the variable to use it.',
+  );
 }
 
 function parseAllowlist(env: NodeJS.ProcessEnv): readonly string[] {
