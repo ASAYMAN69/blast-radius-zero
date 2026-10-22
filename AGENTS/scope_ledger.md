@@ -26,8 +26,24 @@
 
 | Wave | Brief | Agent | Write scope | Shared owner | Status |
 |---|---|---|---|---|---|
-| 0 | `01-vultr-c1-capability-probe.md` | ARCHITECT | `docs/architecture/01-vultr-c1-capability-probe.md` | — | PENDING |
-| 0 | `02-market-and-monetization.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | PENDING |
+| 1 | `03-phase1-design.md` | ARCHITECT | `docs/architecture/02-phase1-design.md` | — | **READY** |
+| 1 | `02-market-and-monetization.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **READY** (off critical path) |
+| 2 | `04-backend-core.md` | BACKEND | `backend/**` except `backend/src/sandbox/**`, `backend/src/broker/**` | `backend/package.json`, `backend/package-lock.json` | PLANNED (needs wave 1 released) |
+| 2 | `05-frontend-phase1.md` | FRONTEND | `frontend/**` | `frontend/package.json`, `frontend/package-lock.json` | PLANNED (needs wave 1 released) |
+| 3 | `06-backend-containment.md` | BACKEND | `backend/src/sandbox/**`, `backend/src/broker/**`, `deploy/**` | `backend/package.json`, `deploy/**` | PLANNED (needs wave 2 released) |
+| 4 | CI + PR hygiene | GITMASTER | `.github/**`, `scripts/ci/**` | serialized | PLANNED |
+| 4 | UI design review | DESIGNER | `docs/design/01-phase1-ui-review.md` | — | PLANNED |
+| 5 | UI polish | FRONTEND | `frontend/**` | — | PLANNED |
+| 6 | Phase 1 verification | TESTER | `AGENTS/reports/**` | read-only on product | PLANNED |
+| — | `01-vultr-c1-capability-probe.md` | ARCHITECT | `docs/architecture/01-vultr-c1-capability-probe.md` | — | **HOLD** — same agent as wave 1; runs after it |
+
+**Wave gate:** wave *N+1* does not start until wave *N* is `RELEASED`. Inside a wave, briefs run in parallel and their write scopes must be disjoint — checked above.
+
+**Notes on this plan**
+- Wave 1 has ARCHITECT and BUSINESS: different agents, disjoint scopes, no conflict.
+- Wave 2 has BACKEND and FRONTEND: disjoint directories. They work in parallel **because** wave 1 froze the contracts. If a contract turns out to be wrong, both briefs say the design doc wins and the worker reports the mismatch.
+- Waves 2 and 3 are both BACKEND, so they are **sequential** — wave 3 starts only after wave 2 is released and the stand-in sandbox is in place to be replaced.
+- The probe (brief 01) is held because it is the same agent as wave 1, and the design brief is on the critical path.
 
 ## Permanent scope map (roster homes)
 

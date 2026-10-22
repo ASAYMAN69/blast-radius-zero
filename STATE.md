@@ -44,6 +44,12 @@
 | D-019 | 2026-10-23 | **New role GITMASTER** (`AGENTS/roles/GITMASTER.md`): the **only** agent permitted to `git commit` / `git push` / `gh pr merge`, and only on the HEAD's explicit instruction. Owns branches, PRs, merge, diff review, CI/CD, repo hygiene. Never edits product source. **Always serialized** — never runs concurrently with an open write scope | Coordinator: "i also need another subagent named GITMASTER that handles pr reviews, merge, branch, push, diff, ci cd etc etc" |
 | D-020 | 2026-10-23 | **Deployment and the public demo URL are deferred** to post-kickoff. The build phase target is "make the project ready before actual work" | Coordinator: "don't worry bout public demo url … we can only obtain it after deployment. before deployment, we making the project ready before actual work" |
 | D-021 | 2026-10-23 | **`docs/VISION.md` is the vision of record** and the HEAD's scope | Coordinator: "i want you to make sure that everything sat right with you and we have a clear vision" |
+| D-022 | 2026-10-23 | **Phase 1 = the minimum real thing: one workload, one sandbox tier, works.** The platform direction is kept (the `SandboxProvider` interface is vertical-agnostic) but Phase 1 ships **one named direction from the brief's own list**, chosen by ARCHITECT for *reliability under a thin agent* | Coordinator: "we need some very core features… just that it works, just works. then we move forward" |
+| D-023 | 2026-10-23 | **The agent is deliberately dumb-but-sufficient.** The demo's quality must never depend on model intelligence we do not control; what is judged is the containment model, which we fully control | Logical consequence of D-022 and the *Application of Technology* gate ("features working smoothly") |
+| D-024 | 2026-10-23 | **The demo scenario must be a single deterministic command**, re-runnable, so the video can be re-shot until it is clean | The rubric needs a containment moment in the video; a flaky demo cannot be re-shot |
+| D-025 | 2026-10-23 | **Video, slides, and pitch are not the current focus.** "Making the project ready" is the focus. BUSINESS still runs in parallel because it is free, but it is off the critical path | Coordinator: "sure we can make a video or make slides etc etc, but that's not our main focus. making the project ready is our main focus" |
+| D-026 | 2026-10-23 | **Each agent runs a persistent session.** The first launch prompt includes `AGENTS/CONTEXT.md`; later launches do not. `AGENTS/CONTEXT.md` is the one-page project orientation every worker reads | Coordinator: "each agent gets a persistent session… the first launch would need to point project context" |
+| D-027 | 2026-10-23 | **Phase 1 uses the standard library only inside the sandbox** — system Python with no `pip`, no network, no installs. Keeps the sandbox free of dependency risk and of any need for network during a run | Constraint from D-022: the sandbox must work with zero egress |
 
 ---
 
@@ -169,6 +175,8 @@ brz/
 
 | When | What |
 |---|---|
+| 2026-10-23 | **Phase 1 planned and briefed.** Coordinator narrowed scope: *"core features… just that it works, just works"*; video/slides explicitly **not** the current focus; *"making the project ready is our main focus."* Decisions D-022…D-027. New briefs: `03-phase1-design.md` (ARCHITECT — freezes every contract so BACKEND and FRONTEND can run in parallel), `04-backend-core.md` (BACKEND — server, config, OpenAI-compatible client with an offline mock, agent loop, `node:sqlite` store, routes), `05-frontend-phase1.md` (FRONTEND — operator console, blast-radius report panel, fixture mode, five states), `06-backend-containment.md` (BACKEND — sealed `bwrap` sandbox, cgroup v2 + rlimit caps, capability broker, egress allowlist, `VultrVMProvider` against a mock, `deploy/bootstrap.sh`, the deterministic demo command). |
+| 2026-10-23 | **`AGENTS/CONTEXT.md` created** — the one-page project orientation every worker reads on first launch. Dispatch format updated: first launch = `Read AGENTS/CONTEXT.md and AGENTS/briefs/NN.md, then start working.`; later launches = `Read AGENTS/briefs/NN.md and start working.` (persistent sessions). |
 | 2026-10-23 | **GitHub repo created**: `github.com/ASAYMAN69/blast-radius-zero` — public, MIT `LICENSE`, `main`, first commit `4895b5a`. `.env` verified unstaged; `skills/` excluded from publish. `gh` confirmed authed as ASAYMAN69 with `repo`+`workflow`. |
 | 2026-10-23 | **New role GITMASTER** (`AGENTS/roles/GITMASTER.md`) — the only agent allowed to commit/push/merge, only on an explicit HEAD instruction; never edits product source; always serialized. Mailbox created. Added to `agent_roles.md`, `AGENT.md` §2, scope ledger. The no-commit rule in `permissions/PROTOCOL.md` §3, `sub_agent_protocol.md` §4, and `AGENT.md` §2 now carries that single exception. |
 | 2026-10-23 | **`docs/VISION.md` written** — the vision of record: thesis, the seven defining decisions, the Vultr portability contract, repo layout, the 7-wave build plan, the three-artifact owner table, a 8-row risk register, and the one-paragraph narrative. HEAD's scope extended to include it. |
@@ -185,17 +193,40 @@ brz/
 
 ## 8. Next actions
 
-1. **Coordinator approves `docs/VISION.md` or corrects it.** Everything else waits on this — that is what "make sure everything sat right and we have a clear vision" means.
-2. **Coordinator answers Q-011 (flagship workload).** The `SandboxProvider` interface is vertical-agnostic, so this can land late — but not after Wave 2.
-3. **Then dispatch Wave 0** — the two product-agnostic briefs already written:
-   ```
-   INVOKE: ARCHITECT
-   Read AGENTS/briefs/01-vultr-c1-capability-probe.md and start working
+**Wave 1 is ready to dispatch.** Two briefs, different agents, disjoint scopes.
 
-   INVOKE: BUSINESS
-   Read AGENTS/briefs/02-market-and-monetization.md and start working
-   ```
-   Disjoint write scopes (`docs/architecture/…` vs `docs/business/…`), so they cannot collide.
-4. **Brief 03 (Wave 1, BACKEND)** — drafted after the vision is approved: `SandboxProvider` interface + `BwrapProvider` + `VultrVMProvider` (mocked) + OpenAI-compatible inference client + capability broker + egress proxy + `node:sqlite` run store + `deploy/bootstrap.sh`. Ships the **Vultr portability contract** as acceptance criteria.
-5. **Git hygiene**: `GITMASTER` takes over branches/PRs/CI once the product code exists. Until then the HEAD commits.
-6. Keep `AGENT.md` `<projectInfo>` as the append-only log; this file is the live state.
+```
+INVOKE: ARCHITECT
+Read AGENTS/CONTEXT.md and AGENTS/briefs/03-phase1-design.md, then start working.
+
+INVOKE: BUSINESS
+Read AGENTS/CONTEXT.md and AGENTS/briefs/02-market-and-monetization.md, then start working.
+```
+
+(BUSINESS is off the critical path — dispatch it if you want it moving, but wave 1 does not wait for it. If you only want one agent running, dispatch ARCHITECT.)
+
+**The plan, in order**
+
+| Wave | Brief | Agent | What it produces | Gate to the next wave |
+|---|---|---|---|---|
+| 1 | `03-phase1-design.md` | ARCHITECT | The frozen contracts: provider interface, API, schema, report shape, file layout, demo scenario | Coordinator accepts the design |
+| 1 | `02-market-and-monetization.md` | BUSINESS | Market, buyer, pricing, pitch narrative | — (parallel) |
+| 2 | `04-backend-core.md` | BACKEND | Control plane: server, config, inference client, agent loop, store, routes | A real task runs end to end |
+| 2 | `05-frontend-phase1.md` | FRONTEND | The operator console with the blast-radius report panel | The console is usable in fixture mode |
+| 3 | `06-backend-containment.md` | BACKEND | Sealed sandbox, broker, egress allowlist, real report, `deploy/bootstrap.sh` | The containment claims are mechanically proven |
+| 4 | CI + PR hygiene | GITMASTER | `.github/workflows/**`, branch and PR discipline | CI green on every push |
+| 4 | UI design review | DESIGNER | A concrete polish spec against the built console | — (parallel) |
+| 5 | UI polish | FRONTEND | The polish applied | The console looks deliberate |
+| 6 | Phase 1 verification | TESTER | An independent verdict against the acceptance criteria | PASS |
+| — | `01-vultr-c1-capability-probe.md` | ARCHITECT | Vultr facts for the production tier | **HOLD** — same agent as wave 1 |
+
+**Still waiting on the coordinator**
+
+- Q-011 the flagship workload — ARCHITECT decides it in the design brief against explicit constraints, so this is no longer blocking.
+- Q-016 a second LLM key for fallback, Q-019 permission for npm installs, Q-020 the 8 Nov code freeze.
+- Any correction to `docs/VISION.md`.
+
+**Rules of the road**
+
+- Keep `AGENT.md` `<projectInfo>` as the append-only log; this file is the live state.
+- The HEAD commits until GITMASTER takes over in wave 4.

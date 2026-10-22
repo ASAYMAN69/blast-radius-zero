@@ -11,8 +11,13 @@
 
 Agent name: <AGENT>. You are <AGENT>. If no name was given to you, STOP and ask.
 
+> **Before starting:** read `AGENTS/CONTEXT.md`, then `AGENT.md`, then
+> `AGENTS/roles/<AGENT>.md`, then this brief. The task is self-contained;
+> do not infer from any conversation you cannot see.
+
 **Wave:** N            **Assigned by:** HEAD      **Date:** YYYY-MM-DD
 **Depends on:** <other brief IDs, or "nothing">
+**Contract:** <the design doc or upstream artifact defining the interfaces, or "none">
 
 ## Goal
 One paragraph: the outcome, in terms of what works when you are done. No implementation detail.

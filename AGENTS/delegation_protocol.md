@@ -63,6 +63,15 @@ Rules for the block:
 - The coordinator may open several agents at once — that is how parallelism happens. That is safe only because the write scopes are disjoint.
 - Do not add per-agent chat instructions. If something matters, it belongs in the brief.
 
+**First launch vs. later launches.** Each agent keeps a **persistent session**, so it already holds the project context and the conventions after its first task. Do not re-teach it.
+
+| Launch | Prompt the coordinator pastes |
+|---|---|
+| **First** time an agent is opened | `Read AGENTS/CONTEXT.md and AGENTS/briefs/NN-slug.md, then start working.` |
+| **Every** launch after that | `Read AGENTS/briefs/NN-slug.md and start working.` |
+
+`AGENTS/CONTEXT.md` is the one-page project orientation — what BRZ is, the stack, the non-negotiables, the env contract, where things live, and the completion bar. It changes as the project moves, so re-reading it is cheap and always right.
+
 **After dispatching, go quiet.** Do not start the work yourself, do not pre-empt the worker's scope, do not write files the worker owns.
 
 ## 5. Waves
