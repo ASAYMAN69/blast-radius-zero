@@ -41,9 +41,17 @@ You may **read** the rest of `backend/**` and you may **edit** files outside the
 - All of `backend/**` (read freely)
 - `AGENTS/permissions/PROTOCOL.md`
 
+> **MONOREPO UPDATE (from HEAD, mid-flight):** the repo is a single npm workspace. The root
+> `package.json` and `tsconfig.base.json` **already exist and are HEAD's files** — do not create or
+> edit them, and ignore any line in this brief that says "no root package.json". Your workspace
+> package owns only `backend/package.json` (or `frontend/package.json`). Each workspace's
+> `tsconfig.json` must **extend `../../tsconfig.base.json`** for the shared strictness and set only
+> what differs (`module`, `moduleResolution`, `lib`, `types`, `outDir`, `include`). One lockfile, one
+> `node_modules`, one `npm install` at the root. Full details: `docs/MONOREPO.md`.
+
 ## Shared / serialized files
-- `backend/package.json` → owner: **you** (brief 04 must be `RELEASED` first — this wave you are the only writer in the repo)
-- `backend/package-lock.json` → owner: **you**
+- `backend/package.json` → **the HEAD's file.** Do not create or edit it.
+- root `package-lock.json` → **the HEAD's file.** One lockfile for the whole workspace. If you need a dependency that is not already listed, **request permission** — the HEAD adds it and re-installs. Never create a lockfile inside a package, never run `npm install` inside a package.
 - `deploy/**` → owner: **you**
 
 ## Requirements
@@ -63,7 +71,7 @@ You may **read** the rest of `backend/**` and you may **edit** files outside the
 - **Never put a secret into the sandbox.** Not in the env, not in a file, not in an argument. If a task needs a credential, it goes through the broker with an allowlist entry.
 - **Do not touch** `backend/src/**` outside `sandbox/` and `broker/`, or `frontend/**`, or `docs/**`, without a granted permission request.
 - **No hardcoded hosts, ports, keys, models, or URLs.** The Vultr endpoint comes from env. The local sandbox paths come from a documented constant or env, not a literal buried in code.
-- **Do not add dependencies** that the design doc does not list. If you need one, request permission with the reason.
+- **Do not add dependencies** that the design doc does not list. The manifests are already written and installed by the HEAD. If you need one, request permission with the reason and the HEAD adds it.
 - Do not commit or push. Do not use the `subagent` tool.
 - **Do not run destructive operations on shared data.** The sandbox's blast radius is the *sandbox*; do not test it against the host.
 - Never write a secret into the repo, a log, or a response.

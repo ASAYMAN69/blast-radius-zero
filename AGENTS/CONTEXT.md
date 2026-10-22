@@ -32,6 +32,7 @@ BRZ is a **containment-first control plane for AI agents**. The user gives a tas
 | Dev provider | Groq (`openai/gpt-oss-120b`) |
 | Prod provider | Vultr Serverless Inference (`https://api.vultrinference.com/v1`) — mandatory for C1 |
 | Repo | `github.com/ASAYMAN69/blast-radius-zero` (public, MIT) |
+| Layout | **Monorepo** — one git repo, one npm workspace root, one lockfile, one `node_modules`. Workspaces: `backend`, `frontend`. `deploy/` is not a package. See `docs/MONOREPO.md` |
 | Ports | control plane `8787`, frontend `5173` |
 
 ## Environment
@@ -72,14 +73,19 @@ Full rules: `AGENT.md`. Protocol: `AGENTS/sub_agent_protocol.md`. Your role: `AG
 ## Where things are
 
 ```
-backend/        control plane (to be built)
-frontend/       React + Vite operator console (to be built)
-deploy/         bootstrap + systemd + env template (to be built)
+backend/        control plane (to be built)  — npm workspace "backend"
+frontend/       React + Vite console (to be built) — npm workspace "frontend"
+deploy/         bootstrap + systemd + env template (to be built) — not a package
+package.json    root workspace manifest (HEAD's file)
+tsconfig.base.json  shared strictness (HEAD's file)
 docs/architecture/  ARCHITECT output — contracts live here
 docs/business/      BUSINESS output
 docs/design/        DESIGNER output
+docs/MONOREPO.md    the workspace contract
 AGENTS/         the harness
 ```
+
+**Never edit a manifest or a lockfile.** The HEAD owns `package.json`, `tsconfig.base.json`, `backend/package.json`, `frontend/package.json`, and the root lockfile. If you need a dependency, request permission with the reason.
 
 ## The bar for "it works"
 

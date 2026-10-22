@@ -28,9 +28,9 @@
 |---|---|---|---|---|---|
 | 1 | `03-phase1-design.md` | ARCHITECT | `docs/architecture/02-phase1-design.md` | — | **READY** |
 | 1 | `02-market-and-monetization.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **READY** (off critical path) |
-| 2 | `04-backend-core.md` | BACKEND | `backend/**` except `backend/src/sandbox/**`, `backend/src/broker/**` | `backend/package.json`, `backend/package-lock.json` | PLANNED (needs wave 1 released) |
-| 2 | `05-frontend-phase1.md` | FRONTEND | `frontend/**` | `frontend/package.json`, `frontend/package-lock.json` | PLANNED (needs wave 1 released) |
-| 3 | `06-backend-containment.md` | BACKEND | `backend/src/sandbox/**`, `backend/src/broker/**`, `deploy/**` | `backend/package.json`, `deploy/**` | PLANNED (needs wave 2 released) |
+| 2 | `04-backend-core.md` | BACKEND | `backend/src/**` except `backend/src/sandbox/**`, `backend/src/broker/**` | none — all manifests are HEAD's | PLANNED (needs wave 1 released) |
+| 2 | `05-frontend-phase1.md` | FRONTEND | `frontend/src/**` | none — all manifests are HEAD's | PLANNED (needs wave 1 released) |
+| 3 | `06-backend-containment.md` | BACKEND | `backend/src/sandbox/**`, `backend/src/broker/**`, `deploy/**` | `deploy/**` | PLANNED (needs wave 2 released) |
 | 4 | CI + PR hygiene | GITMASTER | `.github/**`, `scripts/ci/**` | serialized | PLANNED |
 | 4 | UI design review | DESIGNER | `docs/design/01-phase1-ui-review.md` | — | PLANNED |
 | 5 | UI polish | FRONTEND | `frontend/**` | — | PLANNED |

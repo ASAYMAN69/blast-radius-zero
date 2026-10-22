@@ -36,10 +36,18 @@ Read `AGENTS/CONTEXT.md` (stack, non-negotiables), then the design doc §8 (API 
 - `HACKATHON.md`, `docs/VISION.md` (context only)
 - `AGENTS/permissions/PROTOCOL.md`
 
+> **MONOREPO UPDATE (from HEAD, mid-flight):** the repo is a single npm workspace. The root
+> `package.json` and `tsconfig.base.json` **already exist and are HEAD's files** — do not create or
+> edit them, and ignore any line in this brief that says "no root package.json". Your workspace
+> package owns only `backend/package.json` (or `frontend/package.json`). Each workspace's
+> `tsconfig.json` must **extend `../../tsconfig.base.json`** for the shared strictness and set only
+> what differs (`module`, `moduleResolution`, `lib`, `types`, `outDir`, `include`). One lockfile, one
+> `node_modules`, one `npm install` at the root. Full details: `docs/MONOREPO.md`.
+
 ## Shared / serialized files
-- `frontend/package.json` → owner: **you, this wave** (the only writer in this wave)
-- `frontend/package-lock.json` → owner: **you**
-- root `package.json` → **do not create**. Single npm workspace per the design doc.
+- `frontend/package.json` → **the HEAD's file, written between wave 1 and wave 2** with the dependency list from the design doc, and installed at the workspace root. **Do not create or edit it.**
+- root `package-lock.json` → **the HEAD's file.** One lockfile for the whole workspace. Never create a lockfile inside a package, never run `npm install` inside a package.
+- root `package.json` → **the HEAD's file, already written. Do not create or edit it.** The repo is one npm workspace: `backend` and `frontend` are the two workspace packages.
 
 ## Requirements
 
@@ -62,7 +70,7 @@ Implement, in the file layout the design doc specifies:
 - **The browser talks only to its own origin.** Every API call is a relative `/api/v1/...` path. No absolute backend URL anywhere in the source or the bundle. No host sniffing. No `VITE_*` secret.
 - **Server config is server-side.** The proxy target comes from a non-`VITE_` env var, read in `vite.config.ts`.
 - **Strict TypeScript**, types copied exactly from the design doc's API contract. Do not invent a parallel type system.
-- **No dependencies beyond what the design doc lists.** If you need one that is not listed, request permission with the reason; do not add it.
+- **No dependencies beyond what the design doc lists.** The manifests are already written and installed by the HEAD. If you need one that is not listed, request permission with the reason; do not add it.
 - **Do not touch** `backend/**`, `deploy/**`, `docs/**`, or any harness file.
 - Do not commit or push. Do not use the `subagent` tool.
 - Never render a secret, a token, or an env value.

@@ -32,10 +32,18 @@ Those two subtrees belong to brief 06. You may **read** them and you may **impor
 - `HACKATHON.md`, `docs/VISION.md` (context only)
 - `AGENTS/permissions/PROTOCOL.md`
 
+> **MONOREPO UPDATE (from HEAD, mid-flight):** the repo is a single npm workspace. The root
+> `package.json` and `tsconfig.base.json` **already exist and are HEAD's files** — do not create or
+> edit them, and ignore any line in this brief that says "no root package.json". Your workspace
+> package owns only `backend/package.json` (or `frontend/package.json`). Each workspace's
+> `tsconfig.json` must **extend `../../tsconfig.base.json`** for the shared strictness and set only
+> what differs (`module`, `moduleResolution`, `lib`, `types`, `outDir`, `include`). One lockfile, one
+> `node_modules`, one `npm install` at the root. Full details: `docs/MONOREPO.md`.
+
 ## Shared / serialized files
-- `backend/package.json` → owner: **you, this wave** (the only writer in this wave)
-- `backend/package-lock.json` → owner: **you**
-- root `package.json` → **do not create**. The repo is a single npm workspace rooted at `backend/` and `frontend/`; if the design doc says otherwise, follow the design doc and say so.
+- `backend/package.json` → **the HEAD's file, written between wave 1 and wave 2** with the dependency list from the design doc, and installed at the workspace root. **Do not create or edit it.**
+- root `package-lock.json` → **the HEAD's file.** One lockfile for the whole workspace. Never create a lockfile inside a package, never run `npm install` inside a package.
+- root `package.json` → **the HEAD's file, already written. Do not create or edit it.** The repo is one npm workspace: `backend` and `frontend` are the two workspace packages.
 
 ## Requirements
 
@@ -55,7 +63,7 @@ Implement, in the file layout the design doc specifies:
 ## Constraints
 - **No hardcoded hosts, ports, keys, models, or URLs.** Everything from env. A grep of `backend/src` for `localhost`, `127.0.0.1`, `http://`, `https://`, `gsk_`, `groq`, and `vultr` must return **nothing** (except `http://` inside a test fixture or a comment explaining why, which you must justify in the summary).
 - **Strict TypeScript.** `strict: true`, `noUncheckedIndexedAccess`, no `any` without a written reason. The types must match the design doc's types exactly — FRONTEND is building against them in parallel.
-- **No dependencies beyond what the design doc lists.** If you need one that is not listed, you **do not add it** — you request permission with the reason.
+- **No dependencies beyond what the design doc lists.** The manifests are already written and installed by the HEAD. If you need one that is not listed, you **do not add it** — you request permission with the reason, and the HEAD adds it.
 - **Do not touch** `backend/src/sandbox/**` or `backend/src/broker/**` (brief 06). Do not touch `frontend/**`, `deploy/**`, `docs/**`, or the harness files.
 - Do not commit or push. Do not use the `subagent` tool.
 - **Test data only.** Any test user, file, or run is disposable and prefixed `qa_`; clean it up.
