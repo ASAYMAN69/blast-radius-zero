@@ -1,0 +1,44 @@
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+
+/**
+ * The dev server is the only hop between the browser and the control plane.
+ *
+ * The browser only ever calls relative `/api/...` paths. The proxy target is a
+ * **server-side** env var (`BRZ_API_TARGET`) read here, in Node, at config
+ * time. It is deliberately NOT `VITE_`-prefixed, so it is never inlined into
+ * the browser bundle. There is no default target: the config fails closed, so
+ * a missing value is a startup error rather than a silent misroute.
+ *
+ * The path is forwarded **unchanged** — `/api/v1/runs` arrives at the control
+ * plane as `/api/v1/runs`. No prefix stripping.
+ *
+ * In production there is no proxy at all: the control plane serves the built
+ * bundle and the API from the same origin.
+ */
+export default defineConfig(({ mode }) => {
+  // An empty prefix loads EVERY variable from the env file, including the
+  // non-`VITE_` ones. Only `VITE_`-prefixed variables reach the browser
+  // bundle — and there are none.
+  //
+  // `envDir` is resolved relative to the dev server's CWD, which is
+  // `frontend/`, so `'../'` is the repository root where `.env` lives.
+  const env = loadEnv(mode, '../', '');
+  const target = env.BRZ_API_TARGET;
+  if (!target) {
+    throw new Error(
+      'BRZ_API_TARGET is not set. It points the dev proxy at the control plane. ' +
+        'It is read server-side only and is never exposed to the browser.',
+    );
+  }
+
+  return {
+    plugins: [react()],
+    server: {
+      port: 5173,
+      proxy: {
+        '/api': { target, changeOrigin: true },
+      },
+    },
+  };
+});

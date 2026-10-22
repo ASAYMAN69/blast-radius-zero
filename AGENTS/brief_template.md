@@ -84,6 +84,22 @@ Exact commands, and what a pass looks like:
 
 ---
 
+## Quality bar (inherited by every brief)
+
+A task is not done when it *works*. It is done when it is **right, complete, and presentable to a stranger who has never seen it**. The coordinator's standing instruction is **"never settle for less."** Concretely:
+
+1. **No stubs in the shipped path.** Every code path reachable by the acceptance criteria is real. If something is deliberately deferred, it sits behind an explicit flag and says so in the code — never silently faked.
+2. **Nothing a human reads is a placeholder.** No `TODO`, no filler copy, no empty state that says nothing. Every string a user sees is written.
+3. **Failure paths are designed, not accidental.** Every reachable error state has a written message, a recovery path, and a retry.
+4. **The unhappy path is the deliverable.** For anything that runs untrusted code, the denial, the cap, and the teardown *are* the feature. Build the failure first, then the success.
+5. **It survives a stranger.** No unexplained jargon, no magic numbers, no code that needs a paragraph of context to follow. A reviewer with five minutes must be able to read it.
+6. **It is measured, not asserted.** "It works" needs a command and its output. Prefer a check that **fails** when the claim is false.
+7. **Polish is not optional.** Spacing, type scale, empty states, loading, focus, contrast. A judge watches the screen.
+
+If a brief's acceptance criteria can be met by something that technically works and looks like a prototype, the brief is under-specified — say so in your summary rather than shipping the prototype.
+
+---
+
 ## Writing rules
 
 - **Number the file** `NN-slug.md` with a zero-padded two-digit number. Numbers define order, and the order is the wave order. Numbers are never reused.

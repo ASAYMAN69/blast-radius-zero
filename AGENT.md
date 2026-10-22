@@ -162,6 +162,22 @@ Rules:
 
 These survived the seed. Apply them unless the project brief overrides them.
 
+### 7.0 The quality bar — "never settle for less"
+
+The coordinator's standing instruction: **never settle for less.** A task is not done when it *works*; it is done when it is **right, complete, and presentable to a stranger who has never seen it.**
+
+1. **No stubs in the shipped path.** Every code path reachable by the acceptance criteria is real. Deliberately deferred work sits behind an explicit flag and says so in the code — never silently faked.
+2. **Nothing a human reads is a placeholder.** No `TODO`, no filler copy, no empty state that says nothing. Every string a user sees is written.
+3. **Failure paths are designed, not accidental.** Every reachable error state has a written message, a recovery path, and a retry.
+4. **The unhappy path is the deliverable.** For anything that runs untrusted code, the denial, the cap, and the teardown *are* the feature. Build the failure first.
+5. **It survives a stranger.** No unexplained jargon, no magic numbers, no code that needs a paragraph of context to follow.
+6. **It is measured, not asserted.** "It works" needs a command and its output. Prefer a check that **fails** when the claim is false.
+7. **Polish is not optional.** Spacing, type scale, empty states, loading, focus, contrast.
+
+**This bar applies to the coordinator's own work too.** If the HEAD ships a brief that can be satisfied by something that technically works and looks like a prototype, the brief is under-specified — fix the brief, do not lower the bar.
+
+### 7.1 The technical rules
+
 - **Configuration is explicit.** No hardcoded hosts, ports, API keys, or credential fallbacks (`|| 'localhost:3000'`). Required values live in `.env`; production startup fails closed. Never commit `.env`.
 - **Secrets never leak.** No tokens, keys, hashes, or internal identifiers in source, logs, responses, or URLs.
 - **Internal identifiers stay internal.** Database primary/foreign keys ending in `_internal`, sequence IDs, and password/token hashes never reach a client. Clients use stable external IDs only.

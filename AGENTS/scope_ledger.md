@@ -30,6 +30,7 @@
 | 1 | `02-market-and-monetization.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **RELEASED** (off critical path) |
 | 2 | `04-backend-core.md` | BACKEND | `backend/src/**` except `backend/src/sandbox/**`, `backend/src/broker/**` | none — all manifests are HEAD's | **ACTIVE** |
 | 2 | `05-frontend-phase1.md` | FRONTEND | `frontend/src/**` | none — all manifests are HEAD's | **ACTIVE** |
+| 2 | `07-commercial-revision.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **ACTIVE** |
 | 3 | `06-backend-containment.md` | BACKEND | `backend/src/sandbox/**`, `backend/src/broker/**`, `deploy/**` | `deploy/**` | PLANNED (needs wave 2 released) |
 | 4 | CI + PR hygiene | GITMASTER | `.github/**`, `scripts/ci/**` | serialized | PLANNED |
 | 4 | UI design review | DESIGNER | `docs/design/01-phase1-ui-review.md` | — | PLANNED |
@@ -38,6 +39,10 @@
 | — | `01-vultr-c1-capability-probe.md` | ARCHITECT | `docs/architecture/01-vultr-c1-capability-probe.md` | — | **HOLD** — same agent as wave 1; runs after it |
 
 **Wave gate:** wave *N+1* does not start until wave *N* is `RELEASED`. Inside a wave, briefs run in parallel and their write scopes must be disjoint — checked above.
+
+**Numbering is an ID, not the order.** Brief numbers are stable identifiers; the **wave column** is the order. A brief may be added to an earlier wave later (as `07` was), because the ledger — not the filename — is what prevents overlap.
+
+**Every brief inherits the quality bar** (`AGENT.md` §7.0): no stubs in the shipped path, no placeholders a human reads, designed failure paths, the unhappy path as the deliverable, survives a stranger, measured not asserted, polish not optional. It applies to the HEAD's own briefs.
 
 **Notes on this plan**
 - Wave 1 has ARCHITECT and BUSINESS: different agents, disjoint scopes, no conflict.
