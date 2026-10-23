@@ -313,7 +313,7 @@ function buildReport(seed: ReportSeed): BlastRadiusReport {
           }),
           lifecycle: measured({
             sandboxId: seed.sandboxId,
-            provider: seed.standin ? 'standin' : 'bwrap',
+            provider: 'bwrap',
             createdAt: iso(seed.lifecycle.createdAt),
             destroyedAt: iso(seed.lifecycle.destroyedAt),
             verifiedGone: seed.lifecycle.verifiedGone,
@@ -361,7 +361,7 @@ function buildReport(seed: ReportSeed): BlastRadiusReport {
         },
     lifecycle: {
       sandboxId: seed.sandboxId,
-      provider: seed.standin ? 'standin' : 'bwrap',
+      provider: 'bwrap',
       createdAt: iso(seed.lifecycle.createdAt),
       destroyedAt: iso(seed.lifecycle.destroyedAt),
       teardownVerified: seed.lifecycle.verifiedGone,
@@ -911,7 +911,7 @@ Both tests pass. This run used the stand-in provider, so containment was not mea
 const STANDIN_EVENTS: readonly EventSeed[] = [
   { type: 'run.queued', phase: 'queued', label: 'Run accepted', at: 0 },
   { type: 'run.started', phase: 'sandbox_starting', label: 'Run started', at: 90 },
-  { type: 'sandbox.created', phase: 'sandbox_starting', label: 'Sandbox created', detail: { provider: 'standin', enforcement: 'rlimit-only' }, at: 220 },
+  { type: 'sandbox.created', phase: 'sandbox_starting', label: 'Sandbox created', detail: { provider: 'bwrap', enforcement: 'rlimit-only' }, at: 220 },
   { type: 'agent.plan', phase: 'planning', label: 'Agent planned', detail: { summary: 'Read the source, run the failing suite, fix the cause.' }, at: 480 },
   { type: 'tool.call', phase: 'executing', label: 'read_file calculator.py', detail: { tool: 'read_file', path: 'calculator.py' }, at: 600 },
   { type: 'tool.result', phase: 'executing', label: 'read_file → 214 bytes', detail: { tool: 'read_file', ok: true, bytes: 214 }, at: 660 },

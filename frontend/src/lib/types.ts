@@ -20,17 +20,8 @@
 /** Opaque, externally-visible identifier for one sandbox instance. */
 export type SandboxId = string;
 
-/**
- * Which tier backs a sandbox. Nothing above the interface may branch on this.
- *
- * DEVIATION, mirrored from the backend (brief 04): the union carries a third
- * member, `'standin'`. The design doc requires a stand-in provider to exist
- * (§10.2) and requires its report to be `incomplete` (§14, decision 39), but
- * the frozen union had no label for it. Labelling the stand-in `'bwrap'` would
- * be a false claim about which tier ran, in a product whose value is truthful
- * reports. Brief 06 removes the stand-in and the member can be deleted.
- */
-export type SandboxProviderKind = 'bwrap' | 'vultr-vm' | 'standin';
+/** Which tier backs a sandbox. Nothing above the interface may branch on this. */
+export type SandboxProviderKind = 'bwrap' | 'vultr-vm';
 
 /**
  * How the caps were actually enforced. Recorded verbatim in the report so a
@@ -526,6 +517,7 @@ export type RunEventType =
   | 'sandbox.probe'
   | 'agent.plan'
   | 'agent.message'
+  | 'provider.rotated'
   | 'tool.call'
   | 'tool.result'
   | 'egress.attempt'

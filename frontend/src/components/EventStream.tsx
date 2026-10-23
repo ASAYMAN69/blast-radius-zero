@@ -22,6 +22,7 @@ const EVENT_TONE: Readonly<Record<RunEventType, string>> = {
   'sandbox.destroyed': 'lifecycle',
   'agent.plan': 'agent',
   'agent.message': 'agent',
+  'provider.rotated': 'lifecycle',
   'tool.call': 'tool',
   'tool.result': 'tool',
   'egress.attempt': 'egress',

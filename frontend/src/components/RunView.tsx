@@ -145,16 +145,6 @@ export function RunView({
           </div>
         </dl>
 
-        {run.provider === 'standin' && (
-          <p className="runhead__error" role="status">
-            <span className="mono mono--code">standin</span>
-            <span>
-              This run was executed by the non-sealed stand-in provider. It has no namespace isolation and no
-              cgroup caps, so its report is <strong>incomplete</strong>, not contained.
-            </span>
-          </p>
-        )}
-
         {run.errorCode !== null && (
           <p className="runhead__error" role="status">
             <span className="mono mono--code">{run.errorCode}</span>

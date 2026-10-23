@@ -2761,7 +2761,9 @@ The demo **exits non-zero** if any of these is false. These are the same checks 
 - **Deterministic and identical on every run:** the containment facts, the denial, the resource *limits*, the teardown, the verdict, the event sequence, and the report's structure. These are produced by the control plane and the kernel, not by the model.
 - **Not bit-identical:** the exact text of the agent's explanation, the exact byte count of the patched file, and the exact durations and memory peak. These come from a live model and a live kernel.
 - **The demo retries the whole run up to 2 times** if assertion **D2** fails (the suite is red). The demo reports which attempt succeeded. This keeps the *video* re-shootable without faking anything: a run that the model could not fix is reported as a failure, not hidden.
-- **`npm run demo:offline`** runs the identical scenario against the scripted inference mock and produces a **byte-identical** report every time. This is what CI runs and what the operator uses when the live provider is rate-limited. It is a **development affordance**, and the shipped demo is the live one.
+- **`npm run demo:offline`** runs the identical scenario against the scripted inference mock. The **containment facts, the denial, the resource limits, the teardown, the verdict, the event sequence and the report's structure are identical on every run** — they come from the control plane and the kernel, not the model — but the measured durations and timestamps differ between runs, so two offline runs are **not byte-identical**. This is what CI runs and what the operator uses when the live provider is rate-limited. It is a **development affordance**, and the shipped demo is the live one.
+
+> The offline demo is deterministic, not byte-identical: the report carries measured facts (durations, timestamps, the event digest), and freezing those measurements would be fabricating a number — the one thing this project exists to avoid.
 
 ---
 
