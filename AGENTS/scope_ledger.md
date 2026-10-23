@@ -36,8 +36,8 @@
 | 3 | `06-backend-containment.md` | BACKEND | `backend/src/sandbox/**`, `backend/src/broker/**`, `deploy/**` | `deploy/**` | **RELEASED** |
 | 4 | `10-gitmaster-ci.md` | GITMASTER | `.github/**`, `scripts/ci/**`, `docs/dev/**` | serialized — never concurrent with an open write scope | **RELEASED** |
 | 4 | `11-designer-ui-review.md` | DESIGNER | `docs/design/01-phase1-ui-review.md` | — (read-only on product) | **RELEASED** |
-| 5 | `12-frontend-polish.md` | FRONTEND | `frontend/**` (manifest is HEAD's) | — | **READY** |
-| 6 | Phase 1 verification | TESTER | `AGENTS/reports/**` | read-only on product | PLANNED |
+| 5 | `12-frontend-polish.md` | FRONTEND | `frontend/**` (manifest is HEAD's) | — | **RELEASED** |
+| 6 | `13-tester-verification.md` | TESTER | `AGENTS/reports/test-2026-10-23-phase1.md` | read-only on product | **READY** |
 | — | `01-vultr-c1-capability-probe.md` | ARCHITECT | `docs/architecture/01-vultr-c1-capability-probe.md` | — | **HOLD** — same agent as wave 1; runs after it |
 
 **Wave gate:** wave *N+1* does not start until wave *N* is `RELEASED`. Inside a wave, briefs run in parallel and their write scopes must be disjoint — checked above.

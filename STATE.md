@@ -225,14 +225,20 @@ brz/
 
 **Wave 2 is DONE** — BACKEND (9,481 lines, 49 files, 66 tests, typecheck clean, `demo:offline` exit 0) and FRONTEND (27 files, ~7,300 lines, typecheck clean, build 371 kB / 96 kB gzip, 11 screenshots, zero console errors) both delivered and committed.
 
-**Wave 3 is ready to dispatch** — brief 06 (BACKEND, the sealed sandbox) is the single most important brief in the project. It is the one that makes the product's claim real: a sealed, ephemeral sandbox with no secrets, no network, real resource caps, and a blast-radius report that proves it.
+**Wave 3 is DONE** — brief 06 (BACKEND, the sealed sandbox) delivered. Typecheck clean, **91 tests pass**, `demo:offline` exit 0 with verdict **contained** and containment **measured**, live demo exit 0 with 2/2 tests green. The product's central claim is now mechanically true: a sealed, ephemeral sandbox with no secrets, no network, real resource caps (cgroup v2 + rlimits, verified by OOM-kill at exactly the cap), and a blast-radius report that proves it — with the four containment requirements tested, not asserted. Five follow-ups are recorded honestly in the summary (Vultr unit tests against a mock, broker unit tests, deploy verification on a clean Ubuntu instance, cgroup v2 on this machine, and the ulimit `-u` floor raised to 1024 because the host already runs ~50 threads per user). None of them block shipping.
+
+**Wave 4 is DONE** — GITMASTER (CI + PR template + dev docs + README + SECURITY.md + CONTRIBUTING.md, both workflows valid YAML, every CI command passing locally) and DESIGNER (15 findings, P1 list 3 items ~45 min, report panel verdict *needs work — density/default-open choices only, structure and not-measured treatment correct*) both delivered.
+
+**Wave 5 is DONE** — FRONTEND polish: P1 (3 items), P2 (2 items), P3 (6 of 7), plus the not-measured-first-class correction and a fifth fixture mirroring the real stand-in output. Typecheck clean, build 380/97 kB, all hygiene greps clean, zero console errors, no overflow at 1440 or 390.
+
+**Wave 6 is ready to dispatch** — TESTER, independent verification. The last step before the product is independently confirmed.
 
 ```
-INVOKE: BACKEND
-Read AGENTS/briefs/06-backend-containment.md and start working.
+INVOKE: TESTER
+Read AGENTS/CONTEXT.md and AGENTS/briefs/13-tester-verification.md, then start working.
 ```
 
-This is a **first launch for the BACKEND agent if its session was lost** — but it has a persistent session from briefs 04 and 08, so the one-line prompt is enough. If the session is gone, point it at `AGENTS/CONTEXT.md` first.
+TESTER is read-only on product code and writes only to `AGENTS/reports/**`. It verifies the contract, the containment claims, the agent loop, the HTTP surface, the access-control gate, the frontend, the deployment artifacts, and scores the rubric. It fixes nothing and reports everything.
 
 **The plan, in order**
 
