@@ -1,7 +1,7 @@
 import type { RunSummary } from '../lib/types';
 import { formatDuration, formatRelative, shortId } from '../lib/format';
 import { StatusPill, VerdictBadge } from './Badges';
-import { EmptyState, ErrorState, LoadingState } from './States';
+import { EmptyState, ErrorState, LoadingState, UnauthorizedState } from './States';
 import type { AsyncState } from '../lib/state';
 
 /**
@@ -15,16 +15,18 @@ export function RunList({
   state,
   selectedRunId,
   onSelect,
+  refresh,
 }: {
   state: AsyncState<readonly RunSummary[]>;
   selectedRunId: string | null;
   onSelect: (runId: string) => void;
+  refresh?: () => void;
 }) {
   if (state.kind === 'loading') {
     return <LoadingState label="Loading runs…" rows={4} />;
   }
   if (state.kind === 'unauthorized') {
-    return <ErrorState error={state.error} context="Access controlled." />;
+    return <UnauthorizedState onRetry={refresh} />;
   }
   if (state.kind === 'error') {
     return <ErrorState error={state.error} context="Could not load the run list." />;

@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 12 — Phase 1 UI polish (apply the DESIGNER review)
 

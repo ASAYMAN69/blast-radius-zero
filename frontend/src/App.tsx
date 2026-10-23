@@ -8,7 +8,7 @@ import { useWorkloads } from './hooks/useWorkloads';
 import { RunList } from './components/RunList';
 import { SubmitForm } from './components/SubmitForm';
 import { RunView } from './components/RunView';
-import { ErrorState } from './components/States';
+import { ErrorState, LoadingState } from './components/States';
 
 /**
  * The operator console.
@@ -204,7 +204,7 @@ export function App() {
               </button>
             </div>
           </div>
-          <RunList state={runs.state} selectedRunId={view?.kind === 'run' ? view.runId : null} onSelect={selectRun} />
+          <RunList state={runs.state} selectedRunId={view?.kind === 'run' ? view.runId : null} onSelect={selectRun} refresh={runs.refresh} />
         </aside>
 
         <main className="main" id="main" tabIndex={-1}>
@@ -219,9 +219,7 @@ export function App() {
               </p>
             </div>
           ) : view === null ? (
-            <div className="connecting">
-              <p className="connecting__title">Loading…</p>
-            </div>
+            <LoadingState label="Loading…" rows={5} />
           ) : view.kind === 'submit' ? (
             <SubmitForm
               workload={workload}

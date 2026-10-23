@@ -19,7 +19,7 @@ import type { ApiError } from '../lib/api';
 
 export function LoadingState({ label, rows = 3 }: { label: string; rows?: number }) {
   return (
-    <div className="state state--loading" role="status" aria-live="polite">
+    <div className="state state--loading" role="status" aria-live="polite" aria-busy="true">
       <p className="state__title">
         <span className="spinner" aria-hidden="true" />
         {label}
@@ -102,7 +102,8 @@ export function UnauthorizedState({ onRetry }: { onRetry?: () => void }) {
     <div className="state state--unauthorized" role="alert">
       <p className="state__title">Access controlled.</p>
       <p className="state__body">
-        This deployment is access-controlled. Sign in or use the allowed access path.
+        This deployment is access-controlled. If you expected to reach it, check your access path or
+        credentials.
       </p>
       <p className="state__meta">
         <span className="mono mono--code">HTTP 401</span>

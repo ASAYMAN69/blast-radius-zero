@@ -173,6 +173,16 @@ export interface ContainmentVerification {
   readonly writableOutsideWorkDir: boolean;
   readonly processNamespaceIsolated: boolean;
   readonly brokerReachable: boolean;
+  /**
+   * The namespace kinds actually in effect inside the sandbox, read from
+   * `/proc/self/ns/*` from inside it. `null` means NOT MEASURED.
+   */
+  readonly namespaces: readonly string[] | null;
+  /**
+   * Was the operator's project directory visible inside the sandbox?
+   * `null` means NOT MEASURED.
+   */
+  readonly projectDirectoryVisible: boolean | null;
   readonly measuredAt: string;
   readonly provider: SandboxProviderKind;
 }

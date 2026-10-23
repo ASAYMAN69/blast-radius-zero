@@ -46,7 +46,7 @@ const KILL_REASON_LABEL: Readonly<Record<SandboxKillReason, string>> = {
   'provider-error': 'provider error',
 };
 
-function verdictTone(verdict: BlastRadiusVerdict): 'good' | 'warn' | 'bad' | 'neutral' {
+function verdictTone(verdict: BlastRadiusVerdict): 'good' | 'warn' | 'bad' | 'incomplete' | 'neutral' {
   switch (verdict) {
     case 'contained':
       return 'good';
@@ -55,6 +55,9 @@ function verdictTone(verdict: BlastRadiusVerdict): 'good' | 'warn' | 'bad' | 'ne
     case 'violated':
       return 'bad';
     case 'incomplete':
+      // "incomplete" is honesty, not failure: the system refuses to claim
+      // what it has not measured. It is a calm, deliberate tone — never red.
+      return 'incomplete';
     default:
       return 'neutral';
   }
@@ -83,7 +86,8 @@ function Tile({
 function NotMeasured({ reason }: { reason: string }) {
   return (
     <span className="notmeasured" title={reason}>
-      not measured
+      <span className="notmeasured__label">not measured</span>
+      <span className="notmeasured__reason">{reason}</span>
     </span>
   );
 }
@@ -200,7 +204,7 @@ export function ReportPanel({ report, state }: { report: BlastRadiusReport | nul
           label="Files changed"
           value={String(agentFiles.length)}
           note={agentFiles.length > 0 ? agentFiles.map((file) => file.path).join(', ') : 'nothing was modified'}
-          tone={agentFiles.length > 0 ? 'neutral' : 'neutral'}
+          tone={agentFiles.length > 0 ? 'good' : 'neutral'}
         />
         <Tile
           label="Tests"
@@ -286,7 +290,7 @@ export function ReportPanel({ report, state }: { report: BlastRadiusReport | nul
         </p>
       )}
 
-      <details className="disclosure" open>
+      <details className="disclosure" open={report.code.commands.length <= 6}>
         <summary>
           What ran <span className="disclosure__count">{String(report.code.commands.length)} commands</span>
         </summary>
@@ -483,12 +487,64 @@ export function ReportPanel({ report, state }: { report: BlastRadiusReport | nul
         </div>
       </details>
 
-      <details className="disclosure">
+      <details className="disclosure" open={report.verdict !== 'contained'}>
         <summary>Containment measurement</summary>
         <div className="disclosure__body">
           {measurement === null ? (
             <p className="muted">The containment probe never ran, so nothing was measured.</p>
           ) : (
+            <></>
+          )}
+
+          {/* The four containment facts are measured-or-not, independent of the
+              raw probe. They are shown first, because they are the verdict's
+              evidence. */}
+          <FactRow
+            label="Process isolation"
+            value={
+              report.containment.processIsolation.state === 'measured' ? (
+                'measured'
+              ) : (
+                <NotMeasured reason={report.containment.processIsolation.reason} />
+              )
+            }
+            tone={report.containment.processIsolation.state === 'measured' ? 'good' : undefined}
+          />
+          <FactRow
+            label="Secret hygiene"
+            value={
+              report.containment.secretHygiene.state === 'measured' ? (
+                'measured'
+              ) : (
+                <NotMeasured reason={report.containment.secretHygiene.reason} />
+              )
+            }
+            tone={report.containment.secretHygiene.state === 'measured' ? 'good' : undefined}
+          />
+          <FactRow
+            label="Resource limits"
+            value={
+              report.containment.resourceLimits.state === 'measured' ? (
+                'measured'
+              ) : (
+                <NotMeasured reason={report.containment.resourceLimits.reason} />
+              )
+            }
+            tone={report.containment.resourceLimits.state === 'measured' ? 'good' : undefined}
+          />
+          <FactRow
+            label="Lifecycle"
+            value={
+              report.containment.lifecycle.state === 'measured' ? (
+                'measured'
+              ) : (
+                <NotMeasured reason={report.containment.lifecycle.reason} />
+              )
+            }
+            tone={report.containment.lifecycle.state === 'measured' ? 'good' : undefined}
+          />
+
+          {measurement !== null && (
             <>
               <FactRow
                 label="Direct egress reachable"

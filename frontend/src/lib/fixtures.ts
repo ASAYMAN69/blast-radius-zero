@@ -198,6 +198,8 @@ const CONTAINMENT_MEASUREMENT: Omit<ContainmentVerification, 'measuredAt'> = {
   writableOutsideWorkDir: false,
   processNamespaceIsolated: true,
   brokerReachable: true,
+  namespaces: ['user', 'mount', 'pid', 'ipc', 'uts', 'cgroup', 'net'],
+  projectDirectoryVisible: false,
   provider: 'bwrap',
 };
 
@@ -208,6 +210,7 @@ interface ReportSeed {
   readonly sandboxId: string;
   readonly offset: number;
   readonly verdict: BlastRadiusVerdict;
+  readonly standin?: boolean;
   readonly headline: string;
   readonly goal: string;
   readonly sourceRef: string;
@@ -270,39 +273,55 @@ function buildReport(seed: ReportSeed): BlastRadiusReport {
       modelExplanation: seed.modelExplanation,
       modelClaim: seed.modelClaim,
     },
-    containment: {
-      processIsolation: measured({
-        namespaces: NAMESPACES,
-        visibleRootEntries: CONTAINMENT_MEASUREMENT.visibleRootEntries,
-        writableOutsideWorkDir: false,
-        processNamespaceIsolated: true,
-        directNetworkReachable: false,
-      }),
-      secretHygiene: measured({
-        environmentKeys: CONTAINMENT_MEASUREMENT.environmentKeys,
-        credentialShapedKeys: [],
-        secretMaterialVisible: false,
-        projectDirectoryVisible: false,
-      }),
-      resourceLimits: measured({
-        enforcement: seed.enforcement,
-        memoryCapBytes: seed.memoryCapBytes,
-        cpuCapSeconds: seed.cpuCapSeconds,
-        processCap: seed.processCap,
-        fileSizeCapBytes: 1_048_576,
-        capFired: seed.capFired,
-      }),
-      lifecycle: measured({
-        sandboxId: seed.sandboxId,
-        provider: 'bwrap',
-        createdAt: iso(seed.lifecycle.createdAt),
-        destroyedAt: iso(seed.lifecycle.destroyedAt),
-        verifiedGone: seed.lifecycle.verifiedGone,
-        workDirRemoved: seed.lifecycle.workDirRemoved,
-        cgroupRemoved: seed.lifecycle.cgroupRemoved,
-      }),
-      measurement: { ...CONTAINMENT_MEASUREMENT, measuredAt: iso(seed.offset + seed.lifecycle.createdAt + 220) },
-    },
+    containment: seed.standin
+      ? {
+          processIsolation: notMeasured(
+            'the containment probe never ran — the stand-in provider does not measure namespaces or isolation',
+          ),
+          secretHygiene: notMeasured(
+            'the containment probe never ran — the stand-in provider does not measure the environment or the project directory',
+          ),
+          resourceLimits: notMeasured(
+            'the containment probe never ran — the stand-in provider applies rlimits but does not measure them against the caps',
+          ),
+          lifecycle: notMeasured(
+            'the containment probe never ran — the stand-in provider does not record lifecycle measurements',
+          ),
+          measurement: null,
+        }
+      : {
+          processIsolation: measured({
+            namespaces: NAMESPACES,
+            visibleRootEntries: CONTAINMENT_MEASUREMENT.visibleRootEntries,
+            writableOutsideWorkDir: false,
+            processNamespaceIsolated: true,
+            directNetworkReachable: false,
+          }),
+          secretHygiene: measured({
+            environmentKeys: CONTAINMENT_MEASUREMENT.environmentKeys,
+            credentialShapedKeys: [],
+            secretMaterialVisible: false,
+            projectDirectoryVisible: false,
+          }),
+          resourceLimits: measured({
+            enforcement: seed.enforcement,
+            memoryCapBytes: seed.memoryCapBytes,
+            cpuCapSeconds: seed.cpuCapSeconds,
+            processCap: seed.processCap,
+            fileSizeCapBytes: 1_048_576,
+            capFired: seed.capFired,
+          }),
+          lifecycle: measured({
+            sandboxId: seed.sandboxId,
+            provider: seed.standin ? 'standin' : 'bwrap',
+            createdAt: iso(seed.lifecycle.createdAt),
+            destroyedAt: iso(seed.lifecycle.destroyedAt),
+            verifiedGone: seed.lifecycle.verifiedGone,
+            workDirRemoved: seed.lifecycle.workDirRemoved,
+            cgroupRemoved: seed.lifecycle.cgroupRemoved,
+          }),
+          measurement: { ...CONTAINMENT_MEASUREMENT, measuredAt: iso(seed.offset + seed.lifecycle.createdAt + 220) },
+        },
     resources: {
       wallClockMs: measured(seed.wallClockMs),
       wallClockCapMs: seed.wallClockCapMs,
@@ -316,23 +335,33 @@ function buildReport(seed: ReportSeed): BlastRadiusReport {
       enforcement: seed.enforcement,
       killReason: seed.killReason,
     },
-    network: {
-      directAccess: 'blocked',
-      directMechanism: 'unshare-net (no interfaces, no route)',
-      probe: measured({
-        reachable: false,
-        errno: 'ENETUNREACH',
-        message: 'Network is unreachable',
-        brokerReachable: true,
-      }),
-      attempts: seed.attempts,
-      deniedCount: denied,
-      allowedCount: allowed,
-      allowlist: seed.allowlist,
-    },
+    network: seed.standin
+      ? {
+          directAccess: 'blocked',
+          directMechanism: 'none — the stand-in runs as a plain child process on the host',
+          probe: notMeasured('the containment probe never ran — the stand-in provider does not measure egress'),
+          attempts: [],
+          deniedCount: 0,
+          allowedCount: 0,
+          allowlist: [],
+        }
+      : {
+          directAccess: 'blocked',
+          directMechanism: 'unshare-net (no interfaces, no route)',
+          probe: measured({
+            reachable: false,
+            errno: 'ENETUNREACH',
+            message: 'Network is unreachable',
+            brokerReachable: true,
+          }),
+          attempts: seed.attempts,
+          deniedCount: denied,
+          allowedCount: allowed,
+          allowlist: seed.allowlist,
+        },
     lifecycle: {
       sandboxId: seed.sandboxId,
-      provider: 'bwrap',
+      provider: seed.standin ? 'standin' : 'bwrap',
       createdAt: iso(seed.lifecycle.createdAt),
       destroyedAt: iso(seed.lifecycle.destroyedAt),
       teardownVerified: seed.lifecycle.verifiedGone,
@@ -849,6 +878,132 @@ const CAP_REPORT = buildReport({
   eventDigest: 'sha256:5b8e2d0f7a3c6b19e4d7a0c3f6b9e2d5a8c1f4b7e0d3a6c9f2b5e8d1a4c7f0b322',
 });
 
+
+// ── fixture 0: the stand-in world — what the system returns TODAY ────────────
+//
+// The only provider that exists right now is the non-sealed stand-in. It runs
+// as a plain child process on the host: no namespaces, no cgroup, no network
+// namespace, no scrubbed environment. Its report is `incomplete` because it
+// measures nothing, and every containment fact is `not-measured` with a reason.
+//
+// This is the case that is actually on screen. It is also the case the HEAD
+// asked to be first-class: `incomplete` must read as honesty ("this build
+// does not claim what it has not measured"), not as a failure, and
+// `not-measured` must look structurally different from a real zero.
+
+const STANDIN_RUN_ID = 'run_01JQ7YB7STND000000000000';
+const STANDIN_SANDBOX_ID = 'sbx_01JQ7YB7STND0000';
+const STANDIN_OFFSET = -8_400_000;
+
+const STANDIN_TEST_OUTPUT = `test_inclusive (tests.test_calculator.TestSumRange) ... ok
+test_single (tests.test_calculator.TestSumRange) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+OK
+`;
+
+const STANDIN_EXPLANATION = `\`sum_range\` used \`range(start, end)\`, which excludes \`end\`. I changed it to \`range(start, end + 1)\` so the range is inclusive.
+
+Both tests pass. This run used the stand-in provider, so containment was not measured.`;
+
+const STANDIN_EVENTS: readonly EventSeed[] = [
+  { type: 'run.queued', phase: 'queued', label: 'Run accepted', at: 0 },
+  { type: 'run.started', phase: 'sandbox_starting', label: 'Run started', at: 90 },
+  { type: 'sandbox.created', phase: 'sandbox_starting', label: 'Sandbox created', detail: { provider: 'standin', enforcement: 'rlimit-only' }, at: 220 },
+  { type: 'agent.plan', phase: 'planning', label: 'Agent planned', detail: { summary: 'Read the source, run the failing suite, fix the cause.' }, at: 480 },
+  { type: 'tool.call', phase: 'executing', label: 'read_file calculator.py', detail: { tool: 'read_file', path: 'calculator.py' }, at: 600 },
+  { type: 'tool.result', phase: 'executing', label: 'read_file → 214 bytes', detail: { tool: 'read_file', ok: true, bytes: 214 }, at: 660 },
+  { type: 'tool.call', phase: 'executing', label: 'run_tests', detail: { tool: 'run_tests', command: TEST_COMMAND }, at: 740 },
+  { type: 'tool.result', phase: 'executing', label: 'run_tests → exit 1', detail: { tool: 'run_tests', ok: false, exitCode: 1, durationMs: 390 }, at: 1130 },
+  { type: 'agent.plan', phase: 'planning', label: 'Repair attempt 1 of 2', detail: { summary: 'The range is exclusive; make it inclusive.' }, at: 1210 },
+  { type: 'tool.call', phase: 'executing', label: 'write_file calculator.py', detail: { tool: 'write_file', path: 'calculator.py' }, at: 1300 },
+  { type: 'tool.result', phase: 'executing', label: 'write_file → 214 bytes', detail: { tool: 'write_file', ok: true, bytes: 214 }, at: 1360 },
+  { type: 'tool.call', phase: 'executing', label: 'run_tests', detail: { tool: 'run_tests', command: TEST_COMMAND }, at: 1450 },
+  { type: 'tool.result', phase: 'executing', label: 'run_tests → exit 0, 2/2 passed', detail: { tool: 'run_tests', ok: true, exitCode: 0, passed: 2, total: 2 }, at: 1845 },
+  { type: 'tool.call', phase: 'executing', label: 'run_tests (verification)', detail: { tool: 'run_tests', command: TEST_COMMAND }, at: 1930 },
+  { type: 'tool.result', phase: 'executing', label: 'run_tests → exit 0, 2/2 passed', detail: { tool: 'run_tests', ok: true, exitCode: 0, passed: 2, total: 2 }, at: 2325 },
+  { type: 'agent.message', phase: 'reporting', label: 'Agent explained', detail: { bytes: STANDIN_EXPLANATION.length }, at: 2420 },
+  { type: 'resource.sample', phase: 'reporting', label: 'Resource sample', detail: { memoryBytes: 39_845_888, cpuMs: 260, processes: 3 }, at: 2470 },
+  { type: 'sandbox.destroyed', phase: 'teardown', label: 'Sandbox destroyed', detail: { verifiedGone: true, workDirRemoved: true, cgroupRemoved: false }, at: 2480 },
+  { type: 'run.completed', phase: 'done', label: 'Run succeeded', detail: { verdict: 'incomplete', testsPassed: 2, testsTotal: 2 }, at: 2490 },
+];
+
+const STANDIN_REPORT = buildReport({
+  runId: STANDIN_RUN_ID,
+  sandboxId: STANDIN_SANDBOX_ID,
+  offset: STANDIN_OFFSET,
+  verdict: 'incomplete',
+  standin: true,
+  headline:
+    'Containment not measured. 1 file changed, 2/2 tests passed, egress not measured (0 attempts recorded), sandbox destroyed.',
+  goal: DEMO_TASK,
+  sourceRef: 'shr-sum-range',
+  filesWritten: [
+    { path: 'calculator.py', bytes: 214, sha256: '9f2c4e1a7b0d3c8e5f61a2d4b7c9e0f3a5d8b1c4e7f0a3d6b9c2e5f8a1d4b7c0a41', origin: 'agent' },
+  ],
+  commands: [
+    command(['python3', '-m', 'unittest', 'discover', '-s', 'tests', '-v'], 0, 390, 'ok'),
+  ],
+  finalTestRun: {
+    command: TEST_COMMAND,
+    exitCode: 0,
+    passed: 2,
+    total: 2,
+    failedTests: [],
+    output: STANDIN_TEST_OUTPUT,
+  },
+  modelExplanation: STANDIN_EXPLANATION,
+  modelClaim: 'I updated `calculator.py` so the range includes `end`.',
+  attempts: [],
+  allowlist: [],
+  memoryPeakBytes: 39_845_888,
+  memoryCapBytes: 134_217_728,
+  cpuSeconds: measured(0.26),
+  cpuCapSeconds: 60,
+  maxProcessesObserved: 3,
+  processCap: 64,
+  outputBytes: 4_102,
+  wallClockMs: 2_491,
+  wallClockCapMs: 120_000,
+  enforcement: 'rlimit-only',
+  killReason: null,
+  capFired: false,
+  lifecycle: {
+    createdAt: 180,
+    destroyedAt: 2480,
+    verifiedGone: true,
+    workDirRemoved: true,
+    cgroupRemoved: false,
+    teardownEvidence:
+      'stand-in exited 0; cgroup was never created (stand-in has none); work dir removed',
+    leakedResources: [],
+  },
+  artifacts: [
+    {
+      label: 'final calculator.py',
+      kind: 'text',
+      content: CALCULATOR_FIXED,
+      bytes: 214,
+      sha256: '9f2c4e1a7b0d3c8e5f61a2d4b7c9e0f3a5d8b1c4e7f0a3d6b9c2e5f8a1d4b7c0a41',
+    },
+  ],
+  stdout: STANDIN_TEST_OUTPUT,
+  stderr: '',
+  timeline: [
+    { at: iso(180), label: 'Sandbox created', kind: 'sandbox', detail: 'stand-in (no namespaces, no cgroup, rlimits only)' },
+    { at: iso(480), label: 'Agent planned', kind: 'agent', detail: 'read the source, run the tests' },
+    { at: iso(1130), label: TEST_COMMAND, kind: 'tool', detail: 'exit 1 — AssertionError: 10 != 15' },
+    { at: iso(1360), label: 'calculator.py rewritten', kind: 'tool', detail: '214 bytes' },
+    { at: iso(1845), label: TEST_COMMAND, kind: 'tool', detail: 'exit 0 — 2 tests passed' },
+    { at: iso(2420), label: 'Agent explained', kind: 'agent', detail: 'the range was exclusive; made it inclusive' },
+    { at: iso(2480), label: 'Sandbox destroyed', kind: 'lifecycle', detail: 'verified gone; work dir deleted; no cgroup existed' },
+  ],
+  eventCount: STANDIN_EVENTS.length,
+  eventDigest: 'sha256:1a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d5e6f708192a3b4c5d6e7f809',
+});
+
 // ── fixture 4: the containment moment — the agent tried, and was refused ─────
 
 const EGRESS_RUN_ID = 'run_01JQ7YBX3M6WSD0TQ2K9ZR5NPA';
@@ -1166,6 +1321,26 @@ export const FIXTURE_RUNS: readonly FixtureRun[] = [
     }),
     events: buildEvents(CAP_RUN_ID, CAP_EVENTS),
     report: CAP_REPORT,
+  },
+  {
+    run: runDetail({
+      runId: STANDIN_RUN_ID,
+      sandboxId: STANDIN_SANDBOX_ID,
+      offset: STANDIN_OFFSET,
+      status: 'succeeded',
+      verdict: 'incomplete',
+      durationMs: 2491,
+      testPassed: true,
+      testTotal: 2,
+      errorCode: null,
+      explanation: STANDIN_REPORT.code.modelExplanation,
+      toolCalls: 7,
+      iterations: 4,
+      totalTokens: 1520,
+      deniedEgressAttempts: 0,
+    }),
+    events: buildEvents(STANDIN_RUN_ID, STANDIN_EVENTS),
+    report: STANDIN_REPORT,
   },
 ];
 
