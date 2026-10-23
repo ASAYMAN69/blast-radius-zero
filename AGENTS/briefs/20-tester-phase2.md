@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 20 — Phase 2 verification: chat-first UI and sessions
 

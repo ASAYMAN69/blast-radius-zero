@@ -1,0 +1,21 @@
+[Unit]
+Description=BRZ control plane
+After=network.target
+
+[Service]
+Type=simple
+User=brz
+Group=brz
+WorkingDirectory=/opt/brz/backend
+EnvironmentFile=/etc/brz/.env
+ExecStart=/usr/bin/node /opt/brz/backend/src/server.ts
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/brz
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+"

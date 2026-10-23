@@ -74,6 +74,14 @@ The workspace manifests, the three workspace `tsconfig.json` files, the root `pa
 6. **One OpenAI-compatible client.** Provider comes from env. Nothing hardcodes Groq or Vultr.
 7. **Nothing in a sandbox is a dependency install.** Phase 1 uses the system Python with the **standard library only** — no `pip`, no network.
 
+## Reference library: ../hmskills/
+
+A reusable skill library lives at `/mnt/ee/aprojects/hmskills/` — markdown skills for frontend (UI/UX, state management, env health, loading/error states, optimization, security, push, s3-direct) and backend (API design, database, security, performance, reliability, deployment, payments, notifications, etc.).
+
+**Agents may read from it** when they need a pattern, a checklist, or a how-to — for example, frontend quality, dark mode, state management, loading/error states, or a backend pattern. Read `ROUTER.md` first, then open at most 1–2 skill files per pass. **Never bulk-read the whole directory.**
+
+It is a *reference*, not a dependency. Do not copy it into this repo, do not import from it, and do not treat it as the source of truth for BRZ's own rules — `AGENT.md` and `AGENTS/CONTEXT.md` are authoritative for BRZ.
+
 ## How the work runs
 
 The **coordinator** (the user) decides what goes in the product. The **main agent** plans, writes briefs, locks scopes, reviews, and commits. **Workers** execute inside a locked write scope and report via a summary.

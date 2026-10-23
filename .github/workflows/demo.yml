@@ -1,0 +1,39 @@
+name: Demo (offline containment)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'deploy/**'
+
+concurrency:
+  group: demo-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  demo:
+    name: offline demo + blast-radius report
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run offline demo
+        run: npm run demo:offline --workspace backend | tee blast-radius-report.txt
+
+      - name: Upload blast-radius report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: blast-radius-report
+          path: blast-radius-report.txt

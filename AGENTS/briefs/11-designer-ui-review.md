@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 11 — UI design review of the Phase 1 console
 

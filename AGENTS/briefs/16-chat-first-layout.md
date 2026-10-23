@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 16 — Chat-first layout spec (dark mode, sidebar, chatbox, right panel, toast)
 

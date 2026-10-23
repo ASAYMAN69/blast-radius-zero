@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 10 — CI, PR hygiene, and repo polish
 

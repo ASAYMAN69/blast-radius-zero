@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 19 — Schema review: sessions and messages tables
 

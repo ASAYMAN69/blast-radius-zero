@@ -1,45 +1,63 @@
-# BRZ
+# BRZ — Blast Radius Zero
 
-> **Status:** harness ready, product not yet defined.
-> The coordinator (the user) owns product scope. The main agent owns the plan, the briefs, and the integration.
+Containment-first control plane for AI agents. The user gives a task; BRZ plans the work, dispatches the real execution into an isolated, ephemeral sandbox, verifies the result, and returns evidence plus a blast-radius report showing that the execution could not reach anything it should not.
 
-## What this repo is right now
+**Not a chat wrapper. A runtime that makes agent execution safe enough to approve.**
 
-A **multi-agent working harness** around an empty product:
+Challenge 01 — *Blast Radius Zero* — of the Vultr Agent Rush Hackathon (lablab.ai × Vultr). MIT licensed.
 
-```
-AGENT.md          ← the harness: rules for the main agent (this session)
-HACKATHON.md      ← the product brief: Vultr Agent Rush Hackathon requirements
-AGENTS/           ← protocols, roles, briefs, completions, mailbox, permissions, reports
-skills/           ← 17 reusable skills (finance, fundraising, legal, infra)
-docs/             ← architecture, design, and user documentation
-```
+## What you get
 
-## How work flows
+- A control plane (`backend/`) that runs an agent loop against an OpenAI-compatible provider.
+- A sealed sandbox tier (bubblewrap + cgroup v2 + rlimits): no direct network, real resource caps, ephemeral per task.
+- A blast-radius report: files changed, tests, commands, network attempts, lifecycle, containment verdict.
+- An operator console (`frontend/`) to submit a task and read the report.
+- A one-command offline demo that proves the containment story without any API key.
 
-```
-You (coordinator)  →  main agent (plans, writes briefs, locks scopes)
-                       ↓  gives you one line per agent
-                 You open that agent, paste the line
-                       ↓
-                 Agent works in its locked write scope
-                       ↓  writes a summary to AGENTS/completion/
-                 Main agent reviews, integrates, commits
+## Quick start (local)
+
+```bash
+cp .env.example .env   # fill in OPENAI_API_KEY / OPENAI_ENDPOINT / OPENAI_MODEL
+npm ci
+npm run dev --workspace backend   # http://127.0.0.1:8787
+npm run dev --workspace frontend  # http://127.0.0.1:5173
 ```
 
-The only thing you have to do per agent:
+## Verify
+
+```bash
+npm run typecheck
+npm test --workspace backend
+npm run build --workspace frontend
+bash scripts/secret-scan.sh
+```
+
+## Demo (offline, no API key)
+
+```bash
+npm run demo:offline --workspace backend
+```
+
+Runs the full containment scenario and prints the blast-radius report. Exits 0 on success.
+
+## Deploy
+
+```bash
+sudo bash deploy/bootstrap.sh
+```
+
+See `deploy/README.md` for the URL and credentials.
+
+## Repository layout
 
 ```
-INVOKE: FRONTEND
-Read AGENTS/briefs/03-auth-endpoint.md and start working
+backend/     control plane (TypeScript, Node 24)
+frontend/    React + Vite operator console
+deploy/      bootstrap, systemd unit, Caddy config
+docs/        architecture, business, design, dev
+scripts/     envcheck, secret-scan
 ```
 
-## Non-overlap guarantee
+## License
 
-Every brief declares an **exclusive write scope**. The ledger at `AGENTS/scope_ledger.md` records who owns which paths in which wave. Two briefs in the same wave may not overlap — the main agent checks this before dispatching. Shared files (lockfiles, root config, migrations) are serialized: one owner per wave.
-
-## Start here
-
-1. Read `AGENT.md` (the main agent's rules).
-2. Read `AGENTS/README.md` (harness index).
-3. Tell the main agent what BRZ is. The first wave is then planned and dispatched.
+MIT — see `LICENSE`.
