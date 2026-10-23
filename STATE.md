@@ -63,6 +63,9 @@
 | D-038 | 2026-10-23 | **Three deviations from the design doc are accepted and recorded, not worked around:** (1) the report is assembled *after* the teardown, because `lifecycle.*` *are* teardown facts; (2) client-disconnect cancellation is honoured only before the `202`, because the console polls over separate requests and cancelling on socket close would kill healthy runs — the explicit cancel route is the supported path; (3) the offline demo is **deterministic, not byte-identical** — the report carries measured durations and timestamps, and freezing measurements is the fabricated number the project exists to avoid | BACKEND's brief-04 report. The *containment beat* — verdict, denial, caps, teardown — remains the part that must be identical across runs; brief 06 verifies exactly that |
 | D-040 | 2026-10-23 | **The certification keeps its costed row in the document and loses its place in the spoken line.** §E.4.1 keeps the cost band and the `requires budget approval` flag — that table is what a judge *reads*, and a dated, costed, honestly-flagged plan is a strength there. Slide segment 9 drops the certification from the 23-second spoken line, because spending a pitch on an unfunded dollar figure is bad pitching: it is a weakness in the spot where the audience is deciding whether to believe us | BUSINESS asked; the HEAD decided. The rubric's "future goals and plans" is satisfied by the dated, costed roadmap in the body, not by a spoken figure |
 | D-041 | 2026-10-23 | **Tier 2's timing becomes "from kickoff", not "Nov 2026".** ARCHITECT's design commits the Vultr tier to shipping *written and unit-tested against a mock*, with the swap at kickoff being a config flag, and measures cold start *at* kickoff — it never commits to a Nov 2026 production date. A date a third party controls is worse than a milestone we control | BUSINESS asked for confirmation against ARCHITECT §4; the check changed the answer. The honest statement is "Tier 2 ships with the code and is exercised on our own Vultr account from kickoff" |
+| D-043 | 2026-10-23 | **Three deviations from the design doc are accepted and recorded, not worked around:** (1) the report is assembled *after* the teardown, because `lifecycle.*` *are* teardown facts; (2) client-disconnect cancellation is honoured only before the `202`, because the console polls over separate requests — the explicit cancel route is the supported path; (3) the offline demo is **deterministic, not byte-identical** — the report carries measured durations and timestamps, and freezing measurements is the fabricated number the project exists to avoid. The *containment beat* — verdict, denial, caps, teardown — is the part that must be identical across runs, and brief 06 verifies exactly that | BACKEND's brief-04 report. The design doc's §7.1 diagram shows the opposite of (1); the HEAD accepted it and will amend the diagram |
+| D-044 | 2026-10-23 | **The inference client gets a fallback provider chain** (`OPENAI_FALLBACKS`, a JSON array), rotating on `rate_limited`, `timeout` and `5xx` but **never on a non-429 4xx** (a bad request is our bug, and rotating would hide it). Plus a **per-run token budget** (`BRZ_RUN_TOKEN_BUDGET`, default 12 000) that ends the run honestly rather than letting it burn a shared quota | The live demo died on a shared 8 000 tokens/minute quota. A single-provider client means one shared quota decides whether the most important artifact in the project works. The HEAD has asked the coordinator for a second key; the chain makes it optional rather than required |
+| D-045 | 2026-10-23 | **The frozen contract gains `provider.rotated`** as a dedicated event type. Brief 06 adds it (one line in the union, two lines in FRONTEND's mirror) so provider rotations are a distinct event instead of being buried in `agent.message` | BACKEND found that rotations were being recorded under `agent.message` because the frozen union has no `provider` member. The contract amendment is granted as part of brief 06's containment work, since the broker's egress log and the provider rotation are the same audit surface |
 | D-042 | 2026-10-23 | **The frontend workspace uses the two-config split with NO project references.** `frontend/tsconfig.json` covers the app only (`src/**`, `types: []`); `vite.config.ts` lives in `frontend/tsconfig.node.json` (`types: ["node"]`); the frontend `typecheck` and `lint` scripts run **both** projects. Project references were producing TS6306/TS6310, and `composite` would have forced an emit step this repo deliberately does not have | FRONTEND reported the split would not compile and worked around it by merging `vite.config.ts` into the app project. The merge is wrong: it typechecks `vite.config.ts` under `types: []`, where Node globals do not exist. The HEAD fixed it at the root and verified typecheck + build with no inline override |
 | D-039 | 2026-10-23 | **The inference client gets a fallback provider chain** (`OPENAI_FALLBACKS`, a JSON array), rotating on `rate_limited`, `timeout` and `5xx` but **never on a non-429 4xx** (a bad request is our bug, and rotating would hide it). Plus a **per-run token budget** (`BRZ_RUN_TOKEN_BUDGET`, default 12000) that ends the run honestly rather than letting it burn a shared quota | The live demo died on a shared 8 000 tokens/minute quota. A single-provider client means one shared quota decides whether the most important artifact in the project works. Still wants a second key from the coordinator — the chain makes it optional rather than required |
 | D-036 | 2026-10-23 | **Coordinator delegated the remaining open calls to the HEAD** — "the rest lies on you" — and set the rule of thumb: never settle for less. The HEAD decides product/commercial calls, escalates only genuine product-scope questions | Coordinator |
@@ -190,6 +193,8 @@ brz/
 
 | When | What |
 |---|---|
+| 2026-10-23 | **Briefs 04, 07, 08, 09 all released.** BACKEND brief 04: 9,481 lines, 49 files, 66 tests, typecheck clean, `demo:offline` exit 0. BACKEND brief 08: 94 tests (28 new), typecheck clean, live demo exit 0 on attempt 1 (8,312 tokens, 2/2 green). BUSINESS brief 07: beachhead leads, certifications costed and budget-flagged, Enterprise tier re-anchored, isolation ladder matching engineering. BUSINESS brief 09: certification out of the spoken line, Tier 2 timing now "from kickoff". |
+| 2026-10-23 | **Three deviations from the design doc are now accepted and recorded, not worked around**: (1) the report is assembled *after* the teardown, because `lifecycle.*` *are* teardown facts; (2) client-disconnect cancellation is honoured only before the `202`, because the console polls over separate requests — the explicit cancel route is the supported path; (3) the offline demo is **deterministic, not byte-identical** — the report carries measured durations and timestamps, and freezing measurements is the fabricated number the project exists to avoid. The *containment beat* — verdict, denial, caps, teardown — is the part that must be identical across runs; brief 06 verifies exactly that. |
 | 2026-10-23 | **Brief 05 (FRONTEND) and brief 07 (BUSINESS) both released.** The console: 27 files, ~7,300 lines, Vite + React 19 + strict TS, no dependency beyond the manifests. Submit screen built from what the API reports (workload and fixtures fetched, never hardcoded), run view with a live event stream polled by seq, the agent's output through a safe Markdown→React renderer, and the blast-radius report panel — verdict banner, four glance tiles, cap meters, one disclosure per question. Five designed states, four fixture runs, 11 screenshots, build 371 kB / 96 kB gzip. The HEAD verified independently: typecheck clean, build clean, no absolute URL, no dangerous DOM API, no `VITE_` secret in the source, and the report panel read in full — it is the kind of artifact a judge scans in five seconds. **Three coordination items resolved by the HEAD:** (1) FRONTEND's permission request for `BRZ_API_TARGET` **granted** and applied to `.env` and `.env.example`, with the decision recorded in the request file; (2) the design doc's two-file tsconfig split **does not compile** (TS6306/TS6310 from project references) — fixed at the root by dropping references entirely: `frontend/tsconfig.json` covers the app only, `vite.config.ts` lives in `tsconfig.node.json`, and the `typecheck`/`lint` scripts run both projects; (3) the ledger's frontend row widened to `frontend/**` since the agent correctly created `index.html`, `vite.config.ts` and `public/`. **Brief 09 written for BUSINESS** with the two decisions it asked for: the certification keeps its costed row in §E.4.1 and loses its place in the spoken line, and Tier 2's timing becomes "from kickoff" rather than "Nov 2026" — because ARCHITECT's design commits the tier to shipping *written and unit-tested* with the swap at kickoff being a config flag, and a date a third party controls is worse than a milestone we control. **Added `scripts/secret-scan.sh`** after the HEAD's own ad-hoc check reported a false positive: the check was wrong (`if cmd | head -1` evaluates `head`'s exit code, always 0), not the repo. Verified afterwards with `git grep` over tracked files, over every blob in history, and over the working tree — the key exists only in the gitignored `.env`, and the entire history is clean. The permanent scanner checks tracked files, the index, untracked-and-unignored files, and all history, prints paths and line numbers only, and was **verified against a canary** (it flags it, and returns to PASS once removed). It is now in the root scripts, in `AGENTS/CONTEXT.md`, and in brief 06's acceptance criteria. |
 
 | When | What |
@@ -216,42 +221,64 @@ brz/
 
 ## 8. Next actions
 
-**Wave 1 is DONE** — ARCHITECT (design, 2,900 lines) and BUSINESS (market, 793 lines) both delivered. The workload is now decided by ARCHITECT: **`self-healing-runner`** (named direction #5), chosen because the answer is in the error message — `AssertionError: 10 != 15` — so a thin agent's job is one comparison and one edit.
+**Wave 1 is DONE** — ARCHITECT (design, 2,900 lines) and BUSINESS (market, 916 lines after three revisions) both delivered. The workload is decided by ARCHITECT: **`self-healing-runner`** (named direction #5), chosen because the answer is in the error message — `AssertionError: 10 != 15` — so a thin agent's job is one comparison and one edit.
 
-**Wave 2 is dispatched.** BACKEND and FRONTEND in parallel, against the frozen contracts.
+**Wave 2 is DONE** — BACKEND (9,481 lines, 49 files, 66 tests, typecheck clean, `demo:offline` exit 0) and FRONTEND (27 files, ~7,300 lines, typecheck clean, build 371 kB / 96 kB gzip, 11 screenshots, zero console errors) both delivered and committed.
+
+**Wave 3 is ready to dispatch** — brief 06 (BACKEND, the sealed sandbox) is the single most important brief in the project. It is the one that makes the product's claim real: a sealed, ephemeral sandbox with no secrets, no network, real resource caps, and a blast-radius report that proves it.
 
 ```
 INVOKE: BACKEND
-Read AGENTS/CONTEXT.md and AGENTS/briefs/04-backend-core.md, then start working.
-
-INVOKE: FRONTEND
-Read AGENTS/CONTEXT.md and AGENTS/briefs/05-frontend-phase1.md, then start working.
+Read AGENTS/briefs/06-backend-containment.md and start working.
 ```
 
-Both are first launches for their agents, so both prompts point at `AGENTS/CONTEXT.md`.
+This is a **first launch for the BACKEND agent if its session was lost** — but it has a persistent session from briefs 04 and 08, so the one-line prompt is enough. If the session is gone, point it at `AGENTS/CONTEXT.md` first.
 
 **The plan, in order**
 
 | Wave | Brief | Agent | What it produces | Gate to the next wave |
 |---|---|---|---|---|
-| 1 | `03-phase1-design.md` | ARCHITECT | The frozen contracts: provider interface, API, schema, report shape, file layout, demo scenario. **DONE** | accepted |
-| 1 | `02-market-and-monetization.md` | BUSINESS | Market, buyer, pricing, pitch narrative. **DONE** | — (parallel) |
-| 2 | `04-backend-core.md` | BACKEND | Control plane: server, config, inference client, agent loop, store, routes | A real task runs end to end |
-| 2 | `05-frontend-phase1.md` | FRONTEND | The operator console with the blast-radius report panel | The console is usable in fixture mode |
-| 3 | `06-backend-containment.md` | BACKEND | Sealed sandbox, broker, egress allowlist, real report, `deploy/bootstrap.sh` | The containment claims are mechanically proven |
+| 1 | `03-phase1-design.md` | ARCHITECT | The frozen contracts — done | accepted |
+| 1 | `02-market-and-monetization.md` | BUSINESS | Market, buyer, pricing, pitch narrative — done | — (parallel) |
+| 2 | `04-backend-core.md` | BACKEND | Control plane, inference, agent loop, store, routes — **RELEASED** (66 tests) | a real task runs end to end |
+| 2 | `05-frontend-phase1.md` | FRONTEND | Operator console, blast-radius panel, fixtures — **RELEASED** (build 371/96 kB) | the console is usable in fixture mode |
+| 2 | `08-contract-gap-and-fallbacks.md` | BACKEND | Contract gap closed, fallback chain, token budget — **RELEASED** (94 tests) | the gap is closed and the demo is resilient |
+| 2 | `07-commercial-revision.md` | BUSINESS | Beachhead leads, certifications costed, Enterprise re-anchored, ladder matches engineering — **RELEASED** | — |
+| 2 | `09-commercial-decisions.md` | BUSINESS | Certification out of the spoken line, Tier 2 timing now "from kickoff" — **RELEASED** | — |
+| 3 | `06-backend-containment.md` | BACKEND | Sealed sandbox, broker, egress allowlist, real report, `deploy/bootstrap.sh`, the deterministic demo command | **The containment claims are mechanically proven** |
 | 4 | CI + PR hygiene | GITMASTER | `.github/workflows/**`, branch and PR discipline | CI green on every push |
 | 4 | UI design review | DESIGNER | A concrete polish spec against the built console | — (parallel) |
 | 5 | UI polish | FRONTEND | The polish applied | The console looks deliberate |
 | 6 | Phase 1 verification | TESTER | An independent verdict against the acceptance criteria | PASS |
-| — | `01-vultr-c1-capability-probe.md` | ARCHITECT | Vultr facts for the production tier | **HOLD** — same agent as wave 1 |
+| — | `01-vultr-c1-capability-probe.md` | ARCHITECT | Vultr facts for the production tier | **HOLD** — same agent as wave 1; runs after it |
 
 **Still waiting on the coordinator**
 
-- Q-011 the flagship workload — ARCHITECT decides it in the design brief against explicit constraints, so this is no longer blocking.
-- Q-016 a second LLM key for fallback, Q-019 permission for npm installs, Q-020 the 8 Nov code freeze.
-- Any correction to `docs/VISION.md`.
+- **A second LLM key** (fallback provider) — the live demo died on an 8 000 tokens/minute shared quota. The fallback chain makes it optional; a key makes it reliable. This is the single cheapest de-risking move left.
+- **Permission for agents to `npm install`** — now largely moot (the HEAD owns the one install), but still on the record.
+- **The 8 Nov 12:00 UTC code freeze** — leaves 11 hours for pitch, video, and polish only.
+- **Q-014: pitch assembly owner** — who turns the outline into the slide PDF and records the video. The deck is a scored artifact, not a wrap-up.
+- **Any correction to `docs/VISION.md`**.
+
+**What is already decided and no longer open**
+
+- Stack: TypeScript + Node + React/Vite (D-015).
+- Local sandbox: bubblewrap + cgroup v2 + rlimits (D-016).
+- No Vultr account until kickoff — build for portability (D-017).
+- Repo public on day one: `github.com/ASAYMAN69/blast-radius-zero` (D-018).
+- GITMASTER is the only agent that commits, pushes or merges (D-019).
+- Deployment and the public URL are post-kickoff (D-020).
+- Workload: `self-healing-runner` (ARCHITECT, brief 03).
+- The agent is deliberately dumb-but-sufficient; the demo's quality must never depend on model intelligence (D-023).
+- The demo scenario is a single deterministic command (D-024).
+- The isolation ladder: Tier 1 namespaces now → Tier 2 per-task Vultr VM from kickoff → Tier 3 microVM 2027 (D-032).
+- The Enterprise tier is anchored on tenancy, volume, retention, export and SLA — not on certifications (D-031).
+- The certification dates are costed, budget-flagged plans, not promises (D-030).
+- The judge-facing deployment is access-controlled: production binds `127.0.0.1`, TLS proxy, basic auth, fail closed (D-034).
+- The quality bar applies to every agent and to the HEAD (D-035).
 
 **Rules of the road**
 
 - Keep `AGENT.md` `<projectInfo>` as the append-only log; this file is the live state.
 - The HEAD commits until GITMASTER takes over in wave 4.
+- The HEAD never settles for less, and neither do the agents.
