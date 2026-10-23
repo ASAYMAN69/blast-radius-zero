@@ -28,6 +28,12 @@ import type {
   WorkloadDescriptor,
   WorkloadFixture,
   WrittenFile,
+  ListSessionsResponse,
+  GetSessionResponse,
+  CreateSessionResponse,
+  RenameSessionResponse,
+  CompactSessionResponse,
+  SendMessageResponse,
 } from './types';
 
 /**
@@ -1628,6 +1634,56 @@ export class FixtureApi implements BrzApi {
   async listFixtures(): Promise<ListFixturesResponse> {
     await sleep(40);
     return { workload: 'self-healing-runner', fixtures: [PROJECT_FIXTURE] };
+  }
+
+  // ── sessions (fixture mode) ──────────────────────────────────────────────
+  private _sessions: Array<{ sessionExternal: string; name: string; updatedAt: string; messageCount: number }> = [];
+
+  async listSessions(): Promise<ListSessionsResponse> {
+    await sleep(40);
+    return { sessions: this._sessions };
+  }
+
+  async getSession(id: string): Promise<GetSessionResponse> {
+    await sleep(40);
+    return {
+      sessionExternal: id,
+      name: 'New session',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      compactedSummary: null,
+      messages: [],
+    };
+  }
+
+  async createSession(): Promise<CreateSessionResponse> {
+    await sleep(40);
+    const id = newRunId();
+    const now = new Date().toISOString();
+    this._sessions.unshift({ sessionExternal: id, name: 'New session', updatedAt: now, messageCount: 0 });
+    return { sessionExternal: id, name: 'New session', createdAt: now };
+  }
+
+  async renameSession(id: string, name: string): Promise<RenameSessionResponse> {
+    await sleep(40);
+    const s = this._sessions.find((x) => x.sessionExternal === id);
+    if (s) s.name = name;
+    return { name };
+  }
+
+  async deleteSession(id: string): Promise<void> {
+    await sleep(40);
+    this._sessions = this._sessions.filter((x) => x.sessionExternal !== id);
+  }
+
+  async compactSession(_id: string): Promise<CompactSessionResponse> {
+    await sleep(40);
+    return { compactedCount: 0, keptCount: 0, summary: '' };
+  }
+
+  async sendMessage(_id: string, _content: string): Promise<SendMessageResponse> {
+    await sleep(40);
+    return { messageExternal: newRunId(), runId: newRunId() };
   }
 
   private find(runId: string): RunDetail | null {

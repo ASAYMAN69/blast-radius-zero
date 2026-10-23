@@ -9,6 +9,13 @@ import type {
   ListWorkloadsResponse,
   SubmitRunRequest,
   SubmitRunResponse,
+  // sessions
+  ListSessionsResponse,
+  GetSessionResponse,
+  CreateSessionResponse,
+  RenameSessionResponse,
+  CompactSessionResponse,
+  SendMessageResponse,
 } from './types';
 import { API_ERROR_MESSAGES } from './types';
 
@@ -134,6 +141,15 @@ export interface BrzApi {
   cancelRun(runId: string): Promise<CancelRunResponse>;
   listWorkloads(): Promise<ListWorkloadsResponse>;
   listFixtures(): Promise<ListFixturesResponse>;
+
+  // ── sessions ────────────────────────────────────────────────────────────
+  listSessions(): Promise<ListSessionsResponse>;
+  getSession(id: string): Promise<GetSessionResponse>;
+  createSession(): Promise<CreateSessionResponse>;
+  renameSession(id: string, name: string): Promise<RenameSessionResponse>;
+  deleteSession(id: string): Promise<void>;
+  compactSession(id: string): Promise<CompactSessionResponse>;
+  sendMessage(id: string, content: string): Promise<SendMessageResponse>;
 }
 
 /**
@@ -165,7 +181,7 @@ function expectObject(value: unknown, what: string): Record<string, unknown> {
 }
 
 interface RequestOptions {
-  readonly method?: 'GET' | 'POST';
+  readonly method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   readonly body?: unknown;
   readonly signal?: AbortSignal;
 }
@@ -263,6 +279,67 @@ export class HttpApi implements BrzApi {
         expectArray(fixture['files'], 'fixture');
         expectArray(fixture['allowedCommands'], 'fixture');
       }
+      return body;
+    });
+  }
+
+  // ── sessions ────────────────────────────────────────────────────────────
+  listSessions(): Promise<ListSessionsResponse> {
+    return this.request<ListSessionsResponse>('/sessions').then((body) => {
+      const response = expectObject(body, 'session list');
+      expectArray(response['sessions'], 'session list');
+      return body;
+    });
+  }
+
+  getSession(id: string): Promise<GetSessionResponse> {
+    return this.request<GetSessionResponse>(`/sessions/${encodeURIComponent(id)}`).then((body) => {
+      const response = expectObject(body, 'session');
+      if (typeof response['sessionExternal'] !== 'string') throw malformed('session');
+      return body;
+    });
+  }
+
+  createSession(): Promise<CreateSessionResponse> {
+    return this.request<CreateSessionResponse>('/sessions', { method: 'POST' }).then((body) => {
+      const response = expectObject(body, 'session');
+      if (typeof response['sessionExternal'] !== 'string') throw malformed('session');
+      return body;
+    });
+  }
+
+  renameSession(id: string, name: string): Promise<RenameSessionResponse> {
+    return this.request<RenameSessionResponse>(`/sessions/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: { name },
+    }).then((body) => {
+      const response = expectObject(body, 'rename');
+      if (typeof response['name'] !== 'string') throw malformed('rename');
+      return body;
+    });
+  }
+
+  deleteSession(id: string): Promise<void> {
+    return this.request<void>(`/sessions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+  }
+
+  compactSession(id: string): Promise<CompactSessionResponse> {
+    return this.request<CompactSessionResponse>(`/sessions/${encodeURIComponent(id)}/compact`, {
+      method: 'POST',
+    }).then((body) => {
+      const response = expectObject(body, 'compaction');
+      if (typeof response['summary'] !== 'string') throw malformed('compaction');
+      return body;
+    });
+  }
+
+  sendMessage(id: string, content: string): Promise<SendMessageResponse> {
+    return this.request<SendMessageResponse>(`/sessions/${encodeURIComponent(id)}/messages`, {
+      method: 'POST',
+      body: { content },
+    }).then((body) => {
+      const response = expectObject(body, 'message');
+      if (typeof response['runId'] !== 'string') throw malformed('message');
       return body;
     });
   }

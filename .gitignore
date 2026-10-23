@@ -13,11 +13,11 @@ dist/
 build/
 .next/
 
-# Runtime artifacts
+# Runtime artifacts (root level only, not backend/src/runs which is product code)
 *.log
-tmp/
-runs/
-sandbox-out/
+/tmp/
+/runs/
+/sandbox-out/
 
 # Agent harness working files
 # The mailbox is transient agent-to-agent coordination and stays local.

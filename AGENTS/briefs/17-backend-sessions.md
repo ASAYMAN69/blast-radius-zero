@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 17 — Sessions, messages, and multi-turn agent loop
 

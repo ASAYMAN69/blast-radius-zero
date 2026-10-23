@@ -7,7 +7,19 @@
       name="description"
       content="BRZ operator console — submit a task, watch the isolated run, and read the blast-radius report."
     />
-    <meta name="color-scheme" content="light" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('brz:theme');
+          var resolved = stored === 'dark' || stored === 'light'
+            ? stored
+            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.classList.add('theme-' + resolved);
+        } catch (e) {
+          document.documentElement.classList.add('theme-light');
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>BRZ — Blast Radius Zero</title>
   </head>

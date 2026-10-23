@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 18 — Chat-first UI: dark mode, sidebar, chatbox, right panel, toast, button fixes
 

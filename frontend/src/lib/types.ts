@@ -680,6 +680,65 @@ export interface ListFixturesResponse {
   readonly fixtures: readonly WorkloadFixture[];
 }
 
+// ── sessions (brief 17) ──────────────────────────────────────────────────
+
+export interface SessionSummary {
+  readonly sessionExternal: string;
+  readonly name: string;
+  readonly updatedAt: string;
+  readonly messageCount: number;
+}
+
+export interface SessionMessage {
+  readonly messageExternal: string;
+  readonly role: 'user' | 'assistant';
+  readonly content: string;
+  readonly createdAt: string;
+}
+
+export interface SessionDetail {
+  readonly sessionExternal: string;
+  readonly name: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly compactedSummary: string | null;
+  readonly messages: readonly SessionMessage[];
+}
+
+export interface ListSessionsResponse {
+  readonly sessions: readonly SessionSummary[];
+}
+
+export interface GetSessionResponse {
+  readonly sessionExternal: string;
+  readonly name: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly compactedSummary: string | null;
+  readonly messages: readonly SessionMessage[];
+}
+
+export interface CreateSessionResponse {
+  readonly sessionExternal: string;
+  readonly name: string;
+  readonly createdAt: string;
+}
+
+export interface RenameSessionResponse {
+  readonly name: string;
+}
+
+export interface CompactSessionResponse {
+  readonly compactedCount: number;
+  readonly keptCount: number;
+  readonly summary: string;
+}
+
+export interface SendMessageResponse {
+  readonly messageExternal: string;
+  readonly runId: string;
+}
+
 export interface HealthResponse {
   readonly status: 'ok' | 'degraded';
   readonly version: string;

@@ -135,3 +135,15 @@ export function assertRunId(value: string): string {
   if (!isRunId(value)) throw new ApiError('run_not_found');
   return value;
 }
+
+/** External session ids: `ses_` + 26 Crockford base32 characters. */
+const SESSION_ID_PATTERN = /^ses_[0-9A-HJKMNP-TV-Z]{26}$/;
+
+export function isSessionId(value: string): boolean {
+  return SESSION_ID_PATTERN.test(value);
+}
+
+export function assertSessionId(value: string): string {
+  if (!isSessionId(value)) throw new ApiError('not_found');
+  return value;
+}

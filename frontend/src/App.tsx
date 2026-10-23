@@ -1,246 +1,301 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import type { ApiError, BrzApi } from './lib/api';
-import { ApiError as ApiErrorClass, HttpApi, probeControlPlane } from './lib/api';
+import { useCallback, useEffect, useState } from 'react';
+import { HttpApi, probeControlPlane } from './lib/api';
 import { FixtureApi } from './lib/fixtures';
-import type { SubmitRunRequest } from './lib/types';
-import { useRuns } from './hooks/useRuns';
-import { useWorkloads } from './hooks/useWorkloads';
-import { RunList } from './components/RunList';
+import type { ApiError, BrzApi as BrzApiType } from './lib/api';
+import type { ChatMessage } from './components/Chatbox';
+import type { ToastItem } from './components/Toast';
+import { ThemeToggle } from './components/ThemeToggle';
+import { Sidebar } from './components/Sidebar';
+import { Chatbox } from './components/Chatbox';
+import { ToastStack } from './components/Toast';
 import { SubmitForm } from './components/SubmitForm';
-import { RunView } from './components/RunView';
-import { ErrorState, LoadingState } from './components/States';
+import { useRuns } from './hooks/useRuns';
+import { useRun } from './hooks/useRun';
+import type { WorkloadDescriptor, WorkloadFixture } from './lib/types';
+import { ReportPanel } from './components/ReportPanel';
 
 /**
- * The operator console.
+ * Chat-first console.
  *
- * The shell does three things and nothing else:
- *
- *   1. Decide how the console talks to the control plane — **live** over the
- *      same-origin `/api` path, or **fixtures** when the control plane is not
- *      there. The choice is visible in the top bar at all times, because a
- *      console that quietly shows sample data is worse than no console.
- *   2. Hold the view: the run list, the submit form, or one run.
- *   3. Keep the run list fresh.
+ * The chatbox is the home. Sessions (runs) live in the left sidebar. The
+ * right panel slides in only when a report needs to be read. A toast on the
+ * session bar announces a deployed run.
  */
 
 type Mode = 'probing' | 'live' | 'fixtures';
-
-type View = { readonly kind: 'run'; readonly runId: string } | { readonly kind: 'submit' };
-
-function toApiError(cause: unknown): ApiError {
-  if (cause instanceof ApiErrorClass) return cause;
-  return new ApiErrorClass('api', 'internal_error', 'Something went wrong on our side.', 0, null);
-}
+type View = { kind: 'chat' } | { kind: 'new' };
 
 export function App() {
-  const liveApi = useMemo(() => new HttpApi(), []);
-  const fixtureApi = useMemo(() => new FixtureApi(), []);
+  const liveApi = useState(() => new HttpApi())[0];
+  const fixtureApi = useState(() => new FixtureApi())[0];
 
   const [mode, setMode] = useState<Mode>('probing');
-  const [probeError, setProbeError] = useState<ApiError | null>(null);
-  const [view, setView] = useState<View | null>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('brz:sidebar-collapsed') === 'true'; } catch { return false; }
+  });
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
+  const [rightPanelRunId, setRightPanelRunId] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [view, setView] = useState<View>({ kind: 'chat' });
+  const [activeRunId, setActiveRunId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<ApiError | null>(null);
+  const [workload, setWorkload] = useState<WorkloadDescriptor | null>(null);
+  const [fixtures, setFixtures] = useState<readonly WorkloadFixture[]>([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const api: BrzApi = mode === 'fixtures' ? fixtureApi : liveApi;
-  // While the console is still finding out whether the control plane is
-  // there, it makes no requests at all — no failed calls, no console noise.
-  const activeApi: BrzApi | null = mode === 'probing' ? null : api;
+  const api: BrzApiType = mode === 'fixtures' ? (fixtureApi as BrzApiType) : (liveApi as BrzApiType);
+  const runs = useRuns(mode === 'probing' ? null : api);
 
-  const runs = useRuns(activeApi);
-  const workloads = useWorkloads(activeApi);
-
-  const connect = useCallback(async () => {
-    setMode('probing');
-    const result = await probeControlPlane();
-    if (result.state === 'unreachable') {
-      setProbeError(result.error);
-      setMode('fixtures');
-    } else {
-      setProbeError(null);
-      setMode('live');
-    }
-    setView(null);
+  // Probe on mount
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const result = await probeControlPlane();
+      if (cancelled) return;
+      if (result.state === 'unreachable') {
+        setMode('fixtures');
+      } else {
+        setMode('live');
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
+  // Load workloads
   useEffect(() => {
-    void connect();
-  }, [connect]);
+    if (mode === 'probing') return;
+    (async () => {
+      try {
+        const [w, f] = await Promise.all([api.listWorkloads(), api.listFixtures()]);
+        setWorkload(w.workloads[0] ?? null);
+        setFixtures(f.fixtures);
+      } catch { /* ignore */ }
+    })();
+  }, [mode, api]);
 
-  // The run list is a drawer on a narrow screen. Escape closes it.
+  // Default to the most recent run
   useEffect(() => {
-    if (!drawerOpen) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setDrawerOpen(false);
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [drawerOpen]);
-
-  // Open on the most recent run; open the form when there is nothing to open.
-  useEffect(() => {
-    if (view !== null) return;
     if (runs.state.kind !== 'ready') return;
+    if (activeRunId !== null) return;
     const newest = runs.state.data[0];
-    setView(newest === undefined ? { kind: 'submit' } : { kind: 'run', runId: newest.runId });
-  }, [runs.state, view]);
+    if (newest) setActiveRunId(newest.runId);
+  }, [runs.state, activeRunId]);
 
-  const handleSubmit = async (request: SubmitRunRequest) => {
+  const activeRun = useRun(activeRunId, api);
+
+  // Persist sidebar collapse
+  useEffect(() => {
+    try { localStorage.setItem('brz:sidebar-collapsed', String(sidebarCollapsed)); } catch { /* ignore */ }
+  }, [sidebarCollapsed]);
+
+  // Escape closes right panel
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && rightPanelOpen) {
+        setRightPanelOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [rightPanelOpen]);
+
+  const openReport = useCallback((runId: string) => {
+    setRightPanelRunId(runId);
+    setRightPanelOpen(true);
+  }, []);
+
+  const closeReport = useCallback(() => {
+    setRightPanelOpen(false);
+  }, []);
+
+  const addToast = useCallback((item: ToastItem) => {
+    setToasts((prev) => {
+      const next = [...prev, item];
+      if (next.length > 3) next.shift();
+      return next;
+    });
+  }, []);
+
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const handleSubmit = async (content: string) => {
+    if (!workload) return;
     setSubmitting(true);
     setSubmitError(null);
     try {
-      const response = await api.submitRun(request);
-      setView({ kind: 'run', runId: response.runId });
-      setDrawerOpen(false);
+      // In fixture mode, create a run via the fixture API
+      const response = await api.submitRun({
+        workload: workload.id as any,
+        task: content,
+        source: { kind: 'fixture', fixtureId: fixtures[0]?.id ?? 'shr-sum-range' },
+      });
+      setActiveRunId(response.runId);
       runs.refresh();
+      // Collapse right panel and show toast
+      setRightPanelOpen(false);
+      addToast({
+        id: response.runId,
+        message: `Run deployed — ${content.slice(0, 40)}`,
+        actionLabel: 'Open report',
+        onAction: () => openReport(response.runId),
+      });
     } catch (cause) {
-      setSubmitError(toApiError(cause));
+      setSubmitError(cause as ApiError);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const toggleMode = () => {
-    if (mode === 'fixtures') {
-      void connect();
-      return;
-    }
-    setMode('fixtures');
-    setProbeError(null);
-    setView(null);
+  const handleNewSession = () => {
+    setView({ kind: 'new' });
   };
 
-  const selectRun = (runId: string) => {
-    setView({ kind: 'run', runId });
+  const handleSelectSession = (id: string) => {
+    setActiveRunId(id);
+    setView({ kind: 'chat' });
     setDrawerOpen(false);
+    // If the session has a report, we could auto-open it, but we keep it closed by default
   };
 
-  const workload =
-    workloads.state.kind === 'ready' ? (workloads.state.data[0] ?? null) : null;
+  // Build chat messages from the active run
+  const chatMessages: ChatMessage[] = [];
+  if (activeRun.state.kind === 'ready' && activeRun.state.data) {
+    const run = activeRun.state.data;
+    chatMessages.push({
+      id: run.runId + '-user',
+      role: 'user',
+      content: run.goal,
+      createdAt: run.createdAt,
+    });
+    if (run.modelExplanation) {
+      chatMessages.push({
+        id: run.runId + '-assistant',
+        role: 'assistant',
+        content: run.modelExplanation,
+        createdAt: run.finishedAt ?? run.updatedAt,
+        runId: run.runId,
+      });
+    }
+  }
+
+  const isStreaming = activeRun.state.kind === 'ready' && (activeRun.state.data?.status === 'queued' || activeRun.state.data?.status === 'running');
+
+  // Sidebar sessions from runs
+  const sessions = (runs.state.kind === 'ready' ? runs.state.data : []).map((r) => ({
+    sessionExternal: r.runId,
+    name: r.goal.slice(0, 40) + (r.goal.length > 40 ? '…' : ''),
+    updatedAt: r.createdAt,
+    messageCount: 2,
+  }));
+
+  const reportRuns = new Set<string>(sessions.filter((s) => {
+    const run = runs.state.kind === 'ready' ? runs.state.data.find((r) => r.runId === s.sessionExternal) : null;
+    return run?.verdict !== null;
+  }).map((s) => s.sessionExternal));
+
+  if (mode === 'probing') {
+    return (
+      <div className="app">
+        <div className="connecting">
+          <p className="connecting__title"><span className="spinner" aria-hidden="true" /> Connecting…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="app">
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
-
+    <div className="app app--chat">
       <header className="topbar">
         <div className="topbar__brand">
           <button
             className="button button--ghost button--small topbar__drawerbutton"
             type="button"
-            onClick={() => setDrawerOpen((open) => !open)}
-            aria-expanded={drawerOpen}
-            aria-controls="runs-sidebar"
+            onClick={() => setDrawerOpen((o) => !o)}
+            aria-label="Toggle sessions"
           >
-            Runs
+            ☰
           </button>
-          <span className="brand" aria-hidden="true">
-            BRZ
-          </span>
+          <span className="brand">BRZ</span>
           <span className="brand__text">
             <strong>Blast Radius Zero</strong>
-            <span>containment-first control plane</span>
           </span>
         </div>
-
         <div className="topbar__right">
+          <ThemeToggle />
           <span className={`mode mode--${mode}`}>
             <span className="mode__dot" aria-hidden="true" />
-            {mode === 'live' ? 'Live control plane' : mode === 'fixtures' ? 'Fixture data' : 'Connecting…'}
+            {mode === 'live' ? 'Live' : 'Fixtures'}
           </span>
-          <button className="button button--ghost button--small" type="button" onClick={toggleMode}>
-            {mode === 'fixtures' ? 'Use live API' : 'Show fixtures'}
-          </button>
-          <button className="button button--ghost button--small" type="button" onClick={runs.refresh}>
-            Refresh
+          <button className="button button--ghost button--small" type="button" onClick={() => setSidebarCollapsed((c) => !c)}>
+            {sidebarCollapsed ? 'Show' : 'Hide'}
           </button>
         </div>
       </header>
 
-      {mode === 'fixtures' && (
-        <div className="banner banner--fixtures" role="status">
-          <p className="banner__text">
-            <strong>Fixture data.</strong> {probeError === null
-              ? 'You switched to the built-in sample runs.'
-              : 'The control plane is not reachable, so the console is showing the built-in sample runs: a successful run, a model failure, a run killed by the memory cap, and a run whose egress attempts were denied.'}
-          </p>
-          <button className="button button--secondary button--small" type="button" onClick={() => void connect()}>
-            Try the live API
-          </button>
-        </div>
+      {drawerOpen && (
+        <button className="scrim" type="button" aria-label="Close sessions" onClick={() => setDrawerOpen(false)} />
       )}
 
-      <div className="app__body">
-        {drawerOpen && (
-          <button
-            className="scrim"
-            type="button"
-            aria-label="Close the run list"
-            onClick={() => setDrawerOpen(false)}
-          />
-        )}
-        <aside className={`sidebar${drawerOpen ? ' sidebar--open' : ''}`} id="runs-sidebar">
-          <div className="sidebar__head">
-            <h2 className="sidebar__title">Runs</h2>
-            <div className="sidebar__actions">
-              <button
-                className="button button--primary button--small"
-                type="button"
-                onClick={() => {
-                  setView({ kind: 'submit' });
-                  setDrawerOpen(false);
-                }}
-              >
-                New run
-              </button>
-              <button
-                className="button button--ghost button--small sidebar__close"
-                type="button"
-                onClick={() => setDrawerOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-          <RunList state={runs.state} selectedRunId={view?.kind === 'run' ? view.runId : null} onSelect={selectRun} refresh={runs.refresh} />
-        </aside>
+      <div className="chat-shell">
+        <Sidebar
+          sessions={sessions}
+          activeId={activeRunId}
+          collapsed={sidebarCollapsed && !drawerOpen}
+          onToggle={() => setSidebarCollapsed((c) => !c)}
+          onSelect={handleSelectSession}
+          onCreate={handleNewSession}
+          onRename={() => {}}
+          onDelete={() => {}}
+          onOpenReport={openReport}
+          reports={reportRuns}
+        />
 
-        <main className="main" id="main" tabIndex={-1}>
-          {mode === 'probing' ? (
-            <div className="connecting">
-              <p className="connecting__title">
-                <span className="spinner" aria-hidden="true" />
-                Connecting to the control plane…
-              </p>
-              <p className="connecting__body">
-                If it does not answer, the console falls back to the built-in fixture runs and says so.
-              </p>
-            </div>
-          ) : view === null ? (
-            <LoadingState label="Loading…" rows={5} />
-          ) : view.kind === 'submit' ? (
+        {view.kind === 'new' ? (
+          <div className="chat-main">
             <SubmitForm
               workload={workload}
-              fixtures={workloads.fixtures}
-              onSubmit={handleSubmit}
+              fixtures={fixtures}
+              onSubmit={async (req) => {
+                await handleSubmit(req.task);
+                setView({ kind: 'chat' });
+              }}
               submitting={submitting}
               error={submitError}
             />
-          ) : (
-            <RunView runId={view.runId} api={api} onBack={() => setView(null)} onSettled={runs.refresh} />
-          )}
-
-          {view !== null && view.kind === 'submit' && workloads.state.kind === 'error' && (
-            <ErrorState
-              error={workloads.state.error}
-              context="The workload could not be loaded."
-              onRetry={workloads.refresh}
+          </div>
+        ) : (
+          <div className="chat-main">
+            <Chatbox
+              messages={chatMessages}
+              onSend={handleSubmit}
+              streaming={isStreaming}
+              onShowReport={openReport}
             />
-          )}
-        </main>
+          </div>
+        )}
+
+        {rightPanelOpen && rightPanelRunId && (
+          <aside className="right-panel" role="complementary" aria-labelledby="report-heading">
+            <div className="right-panel__head">
+              <h2 id="report-heading">Blast-radius report</h2>
+              <button className="button button--ghost button--small" type="button" onClick={closeReport}>
+                Hide report
+              </button>
+            </div>
+            <div className="right-panel__body">
+              <ReportPanel
+                report={activeRun.report.kind === 'ready' ? activeRun.report.data : null}
+                state={activeRun.report}
+              />
+            </div>
+          </aside>
+        )}
       </div>
+
+      <ToastStack items={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

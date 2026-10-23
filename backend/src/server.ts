@@ -34,6 +34,7 @@ import { createBwrapProvider } from './sandbox/bwrap.ts';
 import { createVultrProvider } from './sandbox/vultr.ts';
 import { registerFixtureRoutes } from './routes/fixtures.ts';
 import { registerRunRoutes } from './routes/runs.ts';
+import { registerSessionRoutes } from './routes/sessions.ts';
 import { registerWorkloadRoutes } from './routes/workloads.ts';
 
 /**
@@ -285,6 +286,7 @@ export async function startServer(options: StartServerOptions): Promise<RunningS
   registerWorkloadRoutes(router);
   registerFixtureRoutes(router);
   registerRunRoutes(router, { config, stores, manager });
+  registerSessionRoutes(router, { config, stores, manager, createInference: createInferenceFactory(config) });
 
   const startedAt = Date.now();
   const server = createHttpServer(

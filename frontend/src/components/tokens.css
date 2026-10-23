@@ -84,3 +84,53 @@
   --tap: 44px;
   --duration: 140ms;
 }
+
+/* ── dark theme ──────────────────────────────────────────────────────── */
+.theme-dark {
+  color-scheme: dark;
+
+  --bg: #0b0f14;
+  --surface: #141a22;
+  --surface-2: #1a212b;
+  --surface-3: #222a35;
+  --border: #2a3340;
+  --border-strong: #3a4555;
+
+  --ink: #e6ecf2;
+  --ink-2: #b8c2ce;
+  --ink-3: #8a95a3;
+
+  --accent: #5b8cff;
+  --accent-hover: #7aa2ff;
+  --accent-soft: #1c2a4a;
+  --accent-ink: #0b0f14;
+
+  --good: #3fb980;
+  --good-soft: #122a1f;
+  --good-line: #1f4a33;
+
+  --warn: #e0a040;
+  --warn-soft: #2a2010;
+  --warn-line: #5a3f10;
+
+  --bad: #e0605a;
+  --bad-soft: #2a1412;
+  --bad-line: #5a2420;
+
+  --neutral: #9aa5b1;
+  --neutral-soft: #1f2630;
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Theme transition: only on top-level surfaces, not the whole tree */
+body {
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body {
+    transition: none;
+  }
+}

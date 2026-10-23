@@ -11,6 +11,8 @@ import { createEgressStore, type EgressStore } from './egress.ts';
 import { createResourceStore, type ResourceStore } from './resources.ts';
 import { createArtifactStore, type ArtifactStore } from './artifacts.ts';
 import { createReportStore, type ReportStore } from './reports.ts';
+import { createSessionStore, type SessionStore } from './sessions.ts';
+import { createMessageStore, type MessageStore } from './sessions.ts';
 
 export interface Stores {
   readonly runs: RunStore;
@@ -21,6 +23,8 @@ export interface Stores {
   readonly resources: ResourceStore;
   readonly artifacts: ArtifactStore;
   readonly reports: ReportStore;
+  readonly sessions: SessionStore;
+  readonly messages: MessageStore;
 }
 
 export function createStores(db: Database): Stores {
@@ -33,5 +37,7 @@ export function createStores(db: Database): Stores {
     resources: createResourceStore(db),
     artifacts: createArtifactStore(db),
     reports: createReportStore(db),
+    sessions: createSessionStore(db),
+    messages: createMessageStore(db),
   };
 }
