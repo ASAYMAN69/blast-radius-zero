@@ -7,6 +7,13 @@
  *
  * The script is the one in §7.3: list → read → run (fail) → write (fix) →
  * run (pass) → final message.
+ *
+ * **Determinism, stated honestly.** Two offline runs are identical in
+ * everything the control plane decides — the transcript, the commands, the
+ * exit codes, the verdict, the event sequence, the report's structure — and
+ * they differ in the measured facts: durations, timestamps, and the digest
+ * over them. The report is not byte-identical between runs, and it must not
+ * be: freezing a measurement would be a fabricated number.
  */
 
 import type { ChatRequest, ChatResponse, InferenceClient } from './types.ts';

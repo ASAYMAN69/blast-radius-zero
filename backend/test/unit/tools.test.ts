@@ -22,7 +22,7 @@ import type {
 
 class FakeSession implements SandboxSession {
   readonly id = 'sbx_TESTTESTTESTTEST';
-  readonly provider = 'standin' as const;
+  readonly provider = 'bwrap' as const;
   readonly workDir = '/work';
   readonly limits = {
     wallClockMs: 5_000,

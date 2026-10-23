@@ -15,6 +15,7 @@ import { openDatabase } from '../../src/db/sqlite.ts';
 import { createStores, type Stores } from '../../src/db/store/index.ts';
 import { assembleReport, computeVerdict } from '../../src/runs/report.ts';
 import type { ContainmentSection, Measured } from '../../src/contracts/report.ts';
+import type { ContainmentVerification } from '../../src/contracts/sandbox.ts';
 import { testConfig } from '../helpers/harness.ts';
 import { SHR_SUM_RANGE, TEST_COMMAND } from '../../src/agent/workload.ts';
 
@@ -22,6 +23,114 @@ function newStores(): Stores {
   const db = openDatabase(':memory:');
   migrate(db);
   return createStores(db);
+}
+
+/**
+ * A probe as a *sealed* tier would produce it: everything measured, and the
+ * two nullable fields (brief 08) carrying real values.
+ */
+function syntheticProbe(
+  overrides: {
+    namespaces?: readonly string[] | null;
+    projectDirectoryVisible?: boolean | null;
+  } = {},
+): ContainmentVerification {
+  return {
+    directNetworkReachable: false,
+    directNetworkProbe: {
+      attempted: true,
+      errno: 'ENETUNREACH',
+      message: 'Network is unreachable',
+    },
+    environmentKeys: ['HOME', 'LANG', 'PATH', 'PWD'],
+    secretMaterialVisible: false,
+    visibleRootEntries: ['bin', 'proc', 'tmp', 'usr', 'work'],
+    writableOutsideWorkDir: false,
+    processNamespaceIsolated: true,
+    brokerReachable: true,
+    namespaces: overrides.namespaces ?? null,
+    projectDirectoryVisible: overrides.projectDirectoryVisible ?? null,
+    measuredAt: '2026-01-01T00:00:02.000Z',
+    provider: 'bwrap',
+  };
+}
+
+/** A sealed run: a `bwrap` provider, a probe, and a create + destroy pair. */
+function seedSealedRun(
+  stores: Stores,
+  probe: ContainmentVerification,
+  options: { denied?: number } = {},
+): string {
+  const runId = 'run_01BBBBBBBBBBBBBBBBBBBBBBBB';
+  const createdAt = '2026-01-01T00:00:00.000Z';
+
+  stores.runs.create({
+    id: runId,
+    workload: SHR_SUM_RANGE.workload,
+    goal: 'fix the range',
+    sourceKind: 'fixture',
+    sourceRef: SHR_SUM_RANGE.id,
+    provider: 'bwrap',
+    brokerTokenHash: 'hash',
+    createdAt,
+  });
+
+  stores.sandbox.append({
+    runId,
+    at: createdAt,
+    action: 'create',
+    provider: 'bwrap',
+    sandboxId: 'sbx_SEALED',
+    ok: true,
+    detail: JSON.stringify({
+      enforcement: 'cgroup+rlimit',
+      directMechanism: 'unshare-net (no interfaces, no route)',
+      workDir: '/work',
+      provider: 'bwrap',
+    }),
+  });
+  stores.sandbox.append({
+    runId,
+    at: createdAt,
+    action: 'probe',
+    provider: 'bwrap',
+    sandboxId: 'sbx_SEALED',
+    ok: true,
+    detail: 'Containment probe measured from inside the sandbox.',
+    measurement: probe,
+  });
+  stores.sandbox.append({
+    runId,
+    at: createdAt,
+    action: 'destroy',
+    provider: 'bwrap',
+    sandboxId: 'sbx_SEALED',
+    ok: true,
+    detail: JSON.stringify({
+      verifiedGone: true,
+      workDirRemoved: true,
+      cgroupRemoved: true,
+      leftoverResources: [],
+      error: null,
+    }),
+  });
+
+  for (let index = 0; index < (options.denied ?? 0); index += 1) {
+    stores.egress.append({
+      runId,
+      at: createdAt,
+      capability: 'fetch',
+      url: 'https://example.invalid/thing',
+      host: 'example.invalid',
+      verdict: 'denied',
+      reason: 'host_not_allowlisted',
+      origin: 'containment-probe',
+      bytes: null,
+      durationMs: 1,
+    });
+  }
+
+  return runId;
 }
 
 function measured<T>(value: T): Measured<T> {
@@ -106,6 +215,102 @@ describe('the verdict rule', () => {
   });
 });
 
+describe('a sealed run', () => {
+  it('reaches "contained" when the probe measures the two nullable fields', () => {
+    const stores = newStores();
+    const runId = seedSealedRun(
+      stores,
+      syntheticProbe({
+        namespaces: ['user', 'mount', 'pid', 'net', 'ipc', 'uts'],
+        projectDirectoryVisible: false,
+      }),
+    );
+
+    const run = stores.runs.get(runId);
+    assert.ok(run !== null);
+    const report = assembleReport({ run, stores, config: testConfig() });
+
+    assert.equal(report.verdict, 'contained');
+    assert.equal(report.containment.processIsolation.state, 'measured');
+    assert.equal(report.containment.secretHygiene.state, 'measured');
+    assert.equal(report.containment.resourceLimits.state, 'measured');
+    assert.equal(report.containment.lifecycle.state, 'measured');
+    assert.deepEqual(
+      report.containment.processIsolation.state === 'measured'
+        ? report.containment.processIsolation.value.namespaces
+        : null,
+      ['user', 'mount', 'pid', 'net', 'ipc', 'uts'],
+    );
+    assert.equal(
+      report.containment.secretHygiene.state === 'measured'
+        ? report.containment.secretHygiene.value.projectDirectoryVisible
+        : null,
+      false,
+    );
+  });
+
+  it('reaches "contained-with-denials" when the broker denied the probe fetch', () => {
+    const stores = newStores();
+    const runId = seedSealedRun(
+      stores,
+      syntheticProbe({
+        namespaces: ['user', 'mount', 'pid', 'net'],
+        projectDirectoryVisible: false,
+      }),
+      { denied: 1 },
+    );
+
+    const run = stores.runs.get(runId);
+    assert.ok(run !== null);
+    const report = assembleReport({ run, stores, config: testConfig() });
+    assert.equal(report.verdict, 'contained-with-denials');
+    assert.equal(report.network.deniedCount, 1);
+  });
+
+  it('stays "incomplete" when the probe does not measure the two fields', () => {
+    const stores = newStores();
+    const runId = seedSealedRun(stores, syntheticProbe());
+
+    const run = stores.runs.get(runId);
+    assert.ok(run !== null);
+    const report = assembleReport({ run, stores, config: testConfig() });
+
+    assert.equal(report.verdict, 'incomplete');
+    assert.equal(report.containment.processIsolation.state, 'not-measured');
+    assert.equal(report.containment.secretHygiene.state, 'not-measured');
+    // The reason names the field that is missing.
+    const isolation = report.containment.processIsolation;
+    assert.equal(isolation.state, 'not-measured');
+    if (isolation.state === 'not-measured') {
+      assert.ok(isolation.reason.includes('namespaces'), isolation.reason);
+    }
+    const secrets = report.containment.secretHygiene;
+    assert.equal(secrets.state, 'not-measured');
+    if (secrets.state === 'not-measured') {
+      assert.ok(secrets.reason.includes('projectDirectoryVisible'), secrets.reason);
+    }
+  });
+
+  it('never writes a fabricated false or empty namespace list', () => {
+    const stores = newStores();
+    const runId = seedSealedRun(
+      stores,
+      syntheticProbe({ namespaces: null, projectDirectoryVisible: null }),
+    );
+
+    const run = stores.runs.get(runId);
+    assert.ok(run !== null);
+    const report = assembleReport({ run, stores, config: testConfig() });
+
+    const isolation = report.containment.processIsolation;
+    assert.equal(isolation.state, 'not-measured');
+    assert.equal(isolation.value, null);
+    const secrets = report.containment.secretHygiene;
+    assert.equal(secrets.state, 'not-measured');
+    assert.equal(secrets.value, null);
+  });
+});
+
 describe('report assembly', () => {
   it('assembles a report from the persisted records of a stand-in run', () => {
     const stores = newStores();
@@ -118,7 +323,7 @@ describe('report assembly', () => {
       goal: 'fix the range',
       sourceKind: 'fixture',
       sourceRef: SHR_SUM_RANGE.id,
-      provider: 'standin',
+      provider: 'bwrap',
       brokerTokenHash: 'hash',
       createdAt,
     });
@@ -197,21 +402,21 @@ describe('report assembly', () => {
       runId,
       at: createdAt,
       action: 'create',
-      provider: 'standin',
+      provider: 'bwrap',
       sandboxId: 'sbx_1',
       ok: true,
       detail: JSON.stringify({
         enforcement: 'rlimit-only',
         directMechanism: 'NONE — the stand-in has host network access',
         workDir: '/work',
-        provider: 'standin',
+        provider: 'bwrap',
       }),
     });
     stores.sandbox.append({
       runId,
       at: createdAt,
       action: 'destroy',
-      provider: 'standin',
+      provider: 'bwrap',
       sandboxId: 'sbx_1',
       ok: true,
       detail: JSON.stringify({
@@ -254,7 +459,7 @@ describe('report assembly', () => {
       generatedAt: '2026-01-01T00:00:02.000Z',
     });
 
-    // The stand-in must never claim containment.
+    // Without a probe, every containment fact is not-measured.
     assert.equal(report.verdict, 'incomplete');
     assert.equal(report.containment.processIsolation.state, 'not-measured');
     assert.equal(report.containment.secretHygiene.state, 'not-measured');

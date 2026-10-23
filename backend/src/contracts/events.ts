@@ -31,6 +31,7 @@ export type RunEventType =
   | 'sandbox.probe'
   | 'agent.plan'
   | 'agent.message'
+  | 'provider.rotated'
   | 'tool.call'
   | 'tool.result'
   | 'egress.attempt'

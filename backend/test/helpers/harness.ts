@@ -11,7 +11,7 @@ import path from 'node:path';
 import type { Config } from '../../src/config.ts';
 import { createMockClient } from '../../src/inference/mock.ts';
 import { silentLogger } from '../../src/log.ts';
-import { createStandinProvider } from '../../src/runs/standinProvider.ts';
+import { createBwrapProvider } from '../../src/sandbox/bwrap.ts';
 import { startServer, type RunningServer } from '../../src/server.ts';
 
 export function testConfig(overrides: Partial<Config> = {}): Config {
@@ -29,8 +29,9 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
       apiKey: null,
       timeoutMs: 1_000,
       maxRetries: 0,
+      fallbacks: [],
     },
-    sandboxProvider: 'standin',
+    sandboxProvider: 'bwrap',
     sandboxLimits: {
       wallClockMs: 30_000,
       memoryBytes: 134_217_728,
@@ -46,6 +47,7 @@ export function testConfig(overrides: Partial<Config> = {}): Config {
       maxTotalTokens: 24_000,
       runWallClockMs: 30_000,
     },
+    runTokenBudget: 12_000,
     egress: { allowlist: [], maxBytes: 262_144 },
     ...overrides,
   };
@@ -66,7 +68,7 @@ export async function startTestServer(overrides: Partial<Config> = {}): Promise<
   });
   const running = await startServer({
     config,
-    provider: createStandinProvider(),
+    provider: createBwrapProvider(),
     createInference: () => createMockClient(),
     log: silentLogger,
   });

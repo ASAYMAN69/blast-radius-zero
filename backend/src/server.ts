@@ -30,7 +30,8 @@ import { createMockClient } from './inference/mock.ts';
 import type { InferenceClient } from './inference/types.ts';
 import { logger, type Logger } from './log.ts';
 import { RunManager } from './runs/manager.ts';
-import { createStandinProvider } from './runs/standinProvider.ts';
+import { createBwrapProvider } from './sandbox/bwrap.ts';
+import { createVultrProvider } from './sandbox/vultr.ts';
 import { registerFixtureRoutes } from './routes/fixtures.ts';
 import { registerRunRoutes } from './routes/runs.ts';
 import { registerWorkloadRoutes } from './routes/workloads.ts';
@@ -64,10 +65,9 @@ export interface RunningServer {
  * only provider it can hand out is the non-sealed stand-in.
  */
 export function createProvider(kind: SandboxProvider['kind']): SandboxProvider {
-  if (kind === 'standin') return createStandinProvider();
-  throw new ConfigError(
-    `The ${kind} sandbox provider is not available in this build: the sealed tiers land in brief 06.`,
-  );
+  if (kind === 'bwrap') return createBwrapProvider();
+  if (kind === 'vultr-vm') return createVultrProvider();
+  throw new ConfigError(`Unknown sandbox provider: ${kind}.`);
 }
 
 function createInferenceFactory(config: Config): () => InferenceClient {
@@ -324,6 +324,17 @@ export async function startServer(options: StartServerOptions): Promise<RunningS
 
 async function main(): Promise<void> {
   const config = parseConfig();
+  // Access-control decision (brief 06, 7b). In production the control plane
+  // binds 127.0.0.1 unless an explicit, logged opt-out is given.
+  if (config.isProduction && config.host === '0.0.0.0' && process.env['BRZ_ALLOW_UNAUTHENTICATED'] !== 'true') {
+    throw new ConfigError(
+      'BRZ refuses to start in production bound to 0.0.0.0 without an access-control decision. ' +
+        'Set BRZ_BIND=127.0.0.1 (behind the reverse proxy) or BRZ_ALLOW_UNAUTHENTICATED=true.',
+    );
+  }
+  if (config.isProduction && process.env['BRZ_ALLOW_UNAUTHENTICATED'] === 'true') {
+    logger.warn('BRZ_ALLOW_UNAUTHENTICATED is set: the control plane is exposed without a reverse proxy.');
+  }
   const provider = createProvider(config.sandboxProvider);
   const running = await startServer({ config, provider });
 

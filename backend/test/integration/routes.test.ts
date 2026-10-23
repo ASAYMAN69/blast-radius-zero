@@ -46,7 +46,7 @@ describe('the HTTP API', () => {
     assert.equal(body.inferenceMode, 'mock');
     assert.equal(body.database.state, 'ready');
     assert.ok((body.database.schemaVersion ?? 0) > 0);
-    assert.equal(body.provider, 'standin');
+    assert.equal(body.provider, 'bwrap');
     assert.ok(response.headers['x-request-id'] !== undefined);
   });
 
@@ -164,7 +164,7 @@ describe('the HTTP API', () => {
     assert.equal(run.status, 'succeeded');
     assert.equal(run.testPassed, true);
     assert.equal(run.testTotal, 2);
-    assert.equal(run.provider, 'standin');
+    assert.equal(run.provider, 'bwrap');
     assert.ok(run.sandboxId !== null && run.sandboxId.startsWith('sbx_'));
     assert.ok((run.modelExplanation ?? '').length > 0);
     assert.equal(run.errorCode, null);
@@ -172,9 +172,9 @@ describe('the HTTP API', () => {
     const reportResponse = await requestJson(address, port, 'GET', `/api/v1/runs/${accepted.runId}/report`);
     assert.equal(reportResponse.status, 200);
     const report = (reportResponse.body as GetReportResponse).report;
-    assert.equal(report.verdict, 'incomplete');
+    assert.ok(report.verdict === 'contained' || report.verdict === 'contained-with-denials');
     assert.equal(report.code.finalTestRun?.passed, 2);
-    assert.equal(report.containment.processIsolation.state, 'not-measured');
+    assert.equal(report.containment.processIsolation.state, 'measured');
     assert.ok(report.lifecycle.teardownVerified);
 
     const list = await requestJson(address, port, 'GET', '/api/v1/runs');

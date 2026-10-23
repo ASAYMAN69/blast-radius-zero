@@ -12,12 +12,15 @@ import { migrate } from '../../src/db/migrate.ts';
 import { openDatabase } from '../../src/db/sqlite.ts';
 import { createStores, type Stores } from '../../src/db/store/index.ts';
 import { createMockClient } from '../../src/inference/mock.ts';
+import { InferenceError } from '../../src/inference/client.ts';
+import type { ChatResponse, InferenceClient } from '../../src/inference/types.ts';
 import { ApiError } from '../../src/http/errors.ts';
 import { silentLogger } from '../../src/log.ts';
 import { RunManager } from '../../src/runs/manager.ts';
-import { createStandinProvider } from '../../src/runs/standinProvider.ts';
+import { createBwrapProvider } from '../../src/sandbox/bwrap.ts';
 import { DEMO_FIXTURE_ID, DEMO_TASK, WORKLOAD_ID } from '../../src/agent/workload.ts';
 import { testConfig } from '../helpers/harness.ts';
+import type { Config, FallbackProviderConfig } from '../../src/config.ts';
 import type { RunStatus } from '../../src/contracts/events.ts';
 
 interface Harness {
@@ -27,17 +30,30 @@ interface Harness {
   close(): Promise<void>;
 }
 
-async function newHarness(): Promise<Harness> {
+async function newHarness(
+  options: {
+    readonly createInference?: () => InferenceClient;
+    readonly createFallbackClient?: (entry: FallbackProviderConfig) => InferenceClient;
+    readonly config?: Partial<Config>;
+  } = {},
+): Promise<Harness> {
   const db = openDatabase(':memory:');
   migrate(db);
   const stores = createStores(db);
   const workRoot = await mkdtemp(path.join(tmpdir(), 'brz-manager-'));
-  const config = testConfig({ workRoot, dbPath: ':memory:' });
+  const config = testConfig({
+    workRoot,
+    dbPath: ':memory:',
+    ...options.config,
+  });
   const manager = new RunManager({
     config,
     stores,
-    provider: createStandinProvider(),
-    createInference: () => createMockClient(),
+    provider: createBwrapProvider(),
+    createInference: options.createInference ?? (() => createMockClient()),
+    ...(options.createFallbackClient === undefined
+      ? {}
+      : { createFallbackClient: options.createFallbackClient }),
     logger: silentLogger,
   });
   return {
@@ -91,7 +107,7 @@ describe('the run manager', () => {
       const queued = harness.stores.runs.get(accepted.runId);
       assert.ok(queued !== null);
       assert.equal(queued.status, 'queued');
-      assert.equal(queued.provider, 'standin');
+      assert.equal(queued.provider, 'bwrap');
       // The broker token is never stored in the clear.
       assert.ok(!JSON.stringify(queued).includes('token'));
 
@@ -102,13 +118,13 @@ describe('the run manager', () => {
       assert.equal(finished?.testPassed, true);
       assert.equal(finished?.testTotal, 2);
       assert.equal(finished?.errorCode, null);
-      assert.equal(finished?.verdict, 'incomplete');
+      assert.ok(finished?.verdict === 'contained' || finished?.verdict === 'contained-with-denials');
       assert.ok((finished?.wallClockMs ?? 0) > 0);
 
       const report = harness.stores.reports.get(accepted.runId);
       assert.ok(report !== null);
-      assert.equal(report.verdict, 'incomplete');
-      assert.equal(report.containment.processIsolation.state, 'not-measured');
+      assert.ok(report.verdict === 'contained' || report.verdict === 'contained-with-denials');
+      assert.equal(report.containment.processIsolation.state, 'measured');
       assert.equal(report.lifecycle.leakedResources.length, 0);
     } finally {
       await harness.close();
@@ -185,6 +201,173 @@ describe('the run manager', () => {
           }),
         (error: unknown) => error instanceof ApiError && error.code === 'invalid_path',
       );
+    } finally {
+      await harness.close();
+    }
+  });
+});
+
+describe('the run token budget', () => {
+  it('stops the run at the budget and says so in the report', async () => {
+    // A provider that reports more usage than the budget allows.
+    const greedy: InferenceClient = {
+      mode: 'live',
+      async complete(): Promise<ChatResponse> {
+        return {
+          id: 'r',
+          choices: [
+            { index: 0, message: { role: 'assistant', content: 'I am done.' }, finish_reason: 'stop' },
+          ],
+          usage: { total_tokens: 5_000 },
+        };
+      },
+    };
+
+    const harness = await newHarness({
+      createInference: () => greedy,
+      config: { runTokenBudget: 1_000 },
+    });
+    try {
+      const accepted = harness.manager.submit(submitArgs());
+      const status = await waitForTerminal(harness.stores, accepted.runId);
+      assert.equal(status, 'failed');
+
+      const run = harness.stores.runs.get(accepted.runId);
+      assert.equal(run?.errorCode, 'token_budget_exhausted');
+      assert.equal(run?.totalTokens, 5_000);
+
+      const report = harness.stores.reports.get(accepted.runId);
+      assert.ok(report !== null);
+      assert.ok(
+        report.headline.includes('Token budget exhausted'),
+        `headline was: ${report.headline}`,
+      );
+      assert.ok(report.headline.includes('5000 tokens used against a budget of 1000'), report.headline);
+
+      // The usage that was reached is on the event stream, and so in the report.
+      const events = harness.stores.events.listAll(accepted.runId);
+      const sample = events.find((event) => event.type === 'resource.sample');
+      assert.ok(sample !== undefined);
+      assert.equal(sample.detail['tokens'], 5_000);
+      assert.equal(sample.detail['tokenBudget'], 1_000);
+    } finally {
+      await harness.close();
+    }
+  });
+
+  it('does not stop a run that stays inside the budget', async () => {
+    const harness = await newHarness({ config: { runTokenBudget: 100_000 } });
+    try {
+      const accepted = harness.manager.submit(submitArgs());
+      const status = await waitForTerminal(harness.stores, accepted.runId);
+      assert.equal(status, 'succeeded');
+      const run = harness.stores.runs.get(accepted.runId);
+      assert.equal(run?.errorCode, null);
+    } finally {
+      await harness.close();
+    }
+  });
+});
+
+describe('a provider that cannot serve the run', () => {
+  it('ends the run as model_error when the chain is exhausted', async () => {
+    const throttled: InferenceClient = {
+      mode: 'live',
+      async complete(): Promise<ChatResponse> {
+        throw new InferenceError('rate_limited', 'The provider is throttling us.');
+      },
+    };
+
+    const harness = await newHarness({ createInference: () => throttled });
+    try {
+      const accepted = harness.manager.submit(submitArgs());
+      const status = await waitForTerminal(harness.stores, accepted.runId);
+      assert.equal(status, 'failed');
+      const run = harness.stores.runs.get(accepted.runId);
+      assert.equal(run?.errorCode, 'model_error');
+      // The sandbox is still destroyed: a failed run never leaks a sandbox.
+      assert.equal(harness.stores.sandbox.getDestroy(accepted.runId)?.verifiedGone, true);
+    } finally {
+      await harness.close();
+    }
+  });
+});
+
+describe('the fallback chain, end to end', () => {
+  it('rotates to the fallback and records the rotation on the event stream', async () => {
+    const throttled: InferenceClient = {
+      mode: 'live',
+      async complete(): Promise<ChatResponse> {
+        throw new InferenceError('rate_limited', 'The provider is throttling us.');
+      },
+    };
+
+    const harness = await newHarness({
+      createInference: () => throttled,
+      config: {
+        inference: {
+          mode: 'live',
+          endpoint: 'https://primary.invalid/v1',
+          model: 'a-model',
+          apiKey: 'primary-key',
+          timeoutMs: 1_000,
+          maxRetries: 0,
+          fallbacks: [
+            {
+              label: 'fallback-1',
+              endpoint: 'https://fallback.invalid/v1',
+              model: 'a-model',
+              apiKey: 'fallback-key',
+            },
+          ],
+        },
+      },
+      createFallbackClient: () => ({
+        mode: 'live',
+        async complete(): Promise<ChatResponse> {
+          return {
+            id: 'r',
+            choices: [
+              {
+                index: 0,
+                message: { role: 'assistant', content: 'Fixed it.' },
+                finish_reason: 'stop',
+              },
+            ],
+            usage: { total_tokens: 20 },
+          };
+        },
+      }),
+    });
+
+    try {
+      const accepted = harness.manager.submit(submitArgs());
+      const status = await waitForTerminal(harness.stores, accepted.runId);
+      // The fake fallback answers with a final message and never fixes the
+      // code, so the sandbox's verification run is red: the run fails, and it
+      // fails honestly. What this test is about is the rotation accounting.
+      assert.equal(status, 'failed');
+      assert.equal(harness.stores.runs.get(accepted.runId)?.errorCode, 'tests_not_green');
+
+      const events = harness.stores.events.listAll(accepted.runId);
+      const rotation = events.find((event) => event.detail['rotated'] === true);
+      assert.ok(rotation !== undefined, 'the rotation must be on the event stream');
+      assert.equal(rotation.detail['provider'], 'fallback-1');
+      assert.equal(rotation.detail['reason'], 'rate_limited');
+
+      // The report shows which provider served the run.
+      const report = harness.stores.reports.get(accepted.runId);
+      assert.ok(report !== null);
+      const timeline = report.timeline.map((entry) => entry.detail);
+      assert.ok(
+        timeline.some((detail) => detail.includes('provider=fallback-1')),
+        `timeline was: ${timeline.join(' | ')}`,
+      );
+
+      // No key appears anywhere in the event stream.
+      const serialised = JSON.stringify(events);
+      assert.ok(!serialised.includes('fallback-key'), serialised);
+      assert.ok(!serialised.includes('primary-key'), serialised);
     } finally {
       await harness.close();
     }

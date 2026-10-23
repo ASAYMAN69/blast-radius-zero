@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 08 — Close the contract gap and make the provider resilient
 

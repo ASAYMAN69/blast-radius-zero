@@ -8,6 +8,13 @@
  *  - `NODE_ENV=production` + `BRZ_INFERENCE_MODE=mock` refuses to start;
  *  - there is no default provider, model, host or key.
  *
+ * Two optional variables were added in brief 08:
+ *  - `OPENAI_FALLBACKS` — a JSON array of fallback provider entries, so one
+ *    shared rate limit does not decide whether a run happens at all. Absent
+ *    means no fallbacks and the behaviour is unchanged;
+ *  - `BRZ_RUN_TOKEN_BUDGET` — a hard cap on the tokens one run may spend.
+ *    `0` disables it.
+ *
  * Every default below is a port, a limit or a path — never a credential and
  * never a provider.
  */
@@ -25,6 +32,23 @@ export class ConfigError extends Error {
 
 export type InferenceMode = 'live' | 'mock';
 
+/**
+ * One provider in the fallback chain (brief 08).
+ *
+ * A fallback exists so that a shared rate limit on the primary provider does
+ * not decide whether the demo works. The key is never logged, never
+ * serialised, and never reaches the sandbox.
+ */
+export interface FallbackProviderConfig {
+  /** A stable, non-secret label for this chain position: `fallback-1`, … */
+  readonly label: string;
+  readonly endpoint: string;
+  /** `null` when the entry inherits nothing and the primary has no model. */
+  readonly model: string | null;
+  /** `null` only in mock mode, where no network call is ever made. */
+  readonly apiKey: string | null;
+}
+
 export interface InferenceConfig {
   readonly mode: InferenceMode;
   /** Base URL, no trailing slash. `null` in mock mode when not supplied. */
@@ -35,6 +59,11 @@ export interface InferenceConfig {
   readonly apiKey: string | null;
   readonly timeoutMs: number;
   readonly maxRetries: number;
+  /**
+   * The fallback chain, in order. Empty means "no fallbacks" and the client
+   * behaves exactly as it did before this feature existed.
+   */
+  readonly fallbacks: readonly FallbackProviderConfig[];
 }
 
 export interface RunLimitsConfig {
@@ -60,6 +89,12 @@ export interface Config {
   readonly sandboxProvider: SandboxProviderKind;
   readonly sandboxLimits: SandboxLimits;
   readonly runLimits: RunLimitsConfig;
+  /**
+   * A hard cap on the tokens one run may spend, summed over every model call
+   * (brief 08). `0` disables the cap. When the cap is reached the run stops
+   * with `token_budget_exhausted` — a designed outcome, not a crash.
+   */
+  readonly runTokenBudget: number;
   readonly egress: EgressConfig;
 }
 
@@ -70,6 +105,7 @@ const DEFAULT_MAX_TOOL_CALLS = 12;
 const DEFAULT_MAX_REPAIRS = 2;
 const DEFAULT_MAX_TOTAL_TOKENS = 24_000;
 const DEFAULT_RUN_WALL_CLOCK_MS = 120_000;
+const DEFAULT_RUN_TOKEN_BUDGET = 12_000;
 const DEFAULT_SANDBOX_MEMORY_BYTES = 134_217_728;
 const DEFAULT_SANDBOX_CPU_SECONDS = 60;
 const DEFAULT_SANDBOX_MAX_PROCESSES = 64;
@@ -146,45 +182,106 @@ function parseInferenceMode(env: NodeJS.ProcessEnv, isProduction: boolean): Infe
   return parsed;
 }
 
-function parseEndpoint(raw: string, isProduction: boolean): string {
+function parseEndpoint(raw: string, isProduction: boolean, variableName = 'OPENAI_ENDPOINT'): string {
   let url: URL;
   try {
     url = new URL(raw);
   } catch {
-    throw new ConfigError('OPENAI_ENDPOINT must be an absolute URL.');
+    throw new ConfigError(`${variableName} must be an absolute URL.`);
   }
   if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-    throw new ConfigError('OPENAI_ENDPOINT must use the HTTPS scheme.');
+    throw new ConfigError(`${variableName} must use the HTTPS scheme.`);
   }
   if (isProduction && url.protocol !== 'https:') {
-    throw new ConfigError('OPENAI_ENDPOINT must use HTTPS when NODE_ENV=production.');
+    throw new ConfigError(`${variableName} must use HTTPS when NODE_ENV=production.`);
   }
   // Normalise: drop the trailing slash so `${endpoint}/chat/completions` is well formed.
   return url.toString().replace(/\/+$/, '');
 }
 
+/**
+ * `OPENAI_FALLBACKS` — a JSON array of provider entries:
+ *
+ * ```json
+ * [{"endpoint":"<the provider's HTTPS base url>","apiKey":"<key>","model":"<model>"}]
+ * ```
+ *
+ * Absent or empty means no fallbacks at all, and the client behaves exactly as
+ * it did before this feature existed. An entry may omit `model` and inherit
+ * the primary's, and may omit `apiKey` and inherit the primary's.
+ *
+ * Every failure names the variable and the entry index, and never prints a
+ * value: the array can contain keys.
+ */
+function parseFallbacks(
+  env: NodeJS.ProcessEnv,
+  isProduction: boolean,
+  primaryApiKey: string | null,
+  primaryModel: string | null,
+  requireKey: boolean,
+): readonly FallbackProviderConfig[] {
+  const raw = readOptional(env, 'OPENAI_FALLBACKS');
+  if (raw === null) return [];
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new ConfigError(
+      'OPENAI_FALLBACKS is not valid JSON. The value is never printed, because it can contain keys.',
+    );
+  }
+  if (!Array.isArray(parsed)) {
+    throw new ConfigError('OPENAI_FALLBACKS must be a JSON array of provider entries.');
+  }
+
+  return parsed.map((entry, index) => {
+    const label = `OPENAI_FALLBACKS[${index}]`;
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+      throw new ConfigError(`${label} must be a JSON object with an "endpoint".`);
+    }
+    const record = entry as Record<string, unknown>;
+
+    const endpointRaw = record['endpoint'];
+    if (typeof endpointRaw !== 'string' || endpointRaw.trim().length === 0) {
+      throw new ConfigError(`${label}.endpoint must be an absolute URL.`);
+    }
+    const endpoint = parseEndpoint(endpointRaw.trim(), isProduction, `${label}.endpoint`);
+
+    const modelRaw = record['model'];
+    if (modelRaw !== undefined && modelRaw !== null && typeof modelRaw !== 'string') {
+      throw new ConfigError(`${label}.model must be a string.`);
+    }
+    const model =
+      typeof modelRaw === 'string' && modelRaw.trim().length > 0
+        ? modelRaw.trim()
+        : primaryModel;
+
+    const keyRaw = record['apiKey'];
+    if (keyRaw !== undefined && keyRaw !== null && typeof keyRaw !== 'string') {
+      throw new ConfigError(`${label}.apiKey must be a string.`);
+    }
+    const apiKey =
+      typeof keyRaw === 'string' && keyRaw.trim().length > 0 ? keyRaw.trim() : primaryApiKey;
+
+    if (apiKey === null && requireKey) {
+      throw new ConfigError(
+        `${label}.apiKey is required because OPENAI_API_KEY is not set. The value is never printed.`,
+      );
+    }
+
+    return { label: `fallback-${index + 1}`, endpoint, model, apiKey };
+  });
+}
+
 function parseSandboxProvider(env: NodeJS.ProcessEnv): SandboxProviderKind {
   const raw = readOptional(env, 'BRZ_SANDBOX_PROVIDER');
 
-  if (raw === null) {
-    /*
-     * BRIEF 04 ONLY. The design's default is `bwrap` (§10.8), but the sealed
-     * tier is brief 06 and does not exist yet. Defaulting to a provider that
-     * is not implemented would mean the control plane cannot start at all, so
-     * this build defaults to the NON-SEALED stand-in and says so at startup.
-     * Brief 06 flips this default to `bwrap` and deletes the stand-in.
-     */
-    return 'standin';
-  }
-  if (raw === 'standin') return 'standin';
-  /*
-   * Every other value is a sealed tier, and the sealed tiers land in brief 06.
-   * The names are deliberately not spelled out here: a provider is chosen by
-   * env, never by a literal in the source (§10.8, C1).
-   */
+  if (raw === null) return 'bwrap';
+  if (raw === 'bwrap') return 'bwrap';
+  if (raw === 'vultr-vm') return 'vultr-vm';
   throw new ConfigError(
-    'BRZ_SANDBOX_PROVIDER requests a sealed tier that is not available in this build. ' +
-      'This build provides the non-sealed stand-in only. Unset the variable to use it.',
+    'BRZ_SANDBOX_PROVIDER must be `bwrap` or `vultr-vm`. The value is never printed.',
   );
 }
 
@@ -233,7 +330,16 @@ export function parseConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
 
   const port = readInt(env, 'PORT', DEFAULT_PORT, 1, 65_535);
-  const host = readOptional(env, 'HOST') ?? WILDCARD_HOST;
+  const defaultHost = nodeEnv === 'production' ? '127.0.0.1' : WILDCARD_HOST;
+  const host = readOptional(env, 'BRZ_BIND') ?? readOptional(env, 'HOST') ?? defaultHost;
+
+  /*
+   * The fallback chain is parsed with the same rules as the primary. In live
+   * mode a fallback that inherits the primary's key needs the primary to have
+   * one; in mock mode no network call is ever made, so a missing key is not an
+   * error there.
+   */
+  const fallbacks = parseFallbacks(env, isProduction, apiKey, model, mode === 'live');
 
   const dbPath = readOptional(env, 'BRZ_DB_PATH') ?? path.join(tmpdir(), 'brz', 'brz.db');
   const workRoot = readOptional(env, 'BRZ_WORK_ROOT') ?? path.join(tmpdir(), 'brz', 'runs');
@@ -270,6 +376,7 @@ export function parseConfig(env: NodeJS.ProcessEnv = process.env): Config {
       apiKey,
       timeoutMs: readInt(env, 'OPENAI_TIMEOUT_MS', DEFAULT_INFERENCE_TIMEOUT_MS, 1_000, 600_000),
       maxRetries: readInt(env, 'OPENAI_MAX_RETRIES', DEFAULT_INFERENCE_MAX_RETRIES, 0, 10),
+      fallbacks,
     },
     sandboxProvider: parseSandboxProvider(env),
     sandboxLimits,
@@ -279,6 +386,13 @@ export function parseConfig(env: NodeJS.ProcessEnv = process.env): Config {
       maxTotalTokens: readInt(env, 'BRZ_MAX_TOTAL_TOKENS', DEFAULT_MAX_TOTAL_TOKENS, 1_000, 1_000_000),
       runWallClockMs,
     },
+    runTokenBudget: readInt(
+      env,
+      'BRZ_RUN_TOKEN_BUDGET',
+      DEFAULT_RUN_TOKEN_BUDGET,
+      0,
+      10_000_000,
+    ),
     egress: {
       allowlist: parseAllowlist(env),
       maxBytes: readInt(env, 'BRZ_EGRESS_MAX_BYTES', DEFAULT_EGRESS_MAX_BYTES, 1_024, 16_777_216),

@@ -9,20 +9,28 @@
  * task against the `shr-sum-range` fixture, polls the event stream, prints the
  * full report, and exits non-zero if its assertions fail.
  *
- * Under the non-sealed stand-in (brief 04) the containment assertions D3–D12
- * cannot be satisfied by construction. The demo asserts what is true in this
- * build instead — the run is terminal and green, the report carries no
- * fabricated zeros, every containment fact is `not-measured`, and the verdict
- * is `incomplete`. Claiming `contained` here would be the one unforgivable bug.
+ * **Determinism, stated honestly.** Two offline runs are identical in
+ * everything the control plane decides — the transcript, the commands, the exit
+ * codes, the verdict, the event sequence, the report's structure — and they
+ * differ in the measured facts: durations, timestamps and the digest over
+ * them. The report is not byte-identical between runs, and it must not be:
+ * freezing a measurement would be exactly the fabricated number this project
+ * exists to avoid. The *containment beat* — verdict, denial, caps, teardown —
+ * is the part that has to be identical, and brief 06 verifies exactly that.
+ *
+ * Brief 06 runs on the sealed bwrap tier. The demo asserts the run is terminal
+ * and green, the report carries no fabricated zeros, every containment fact is
+ * measured, and the verdict is `contained` or `contained-with-denials`.
  */
 
 import { mkdtemp, rm } from 'node:fs/promises';
 import { request as httpRequest } from 'node:http';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import type { GetReportResponse, GetRunResponse, ListEventsResponse, SubmitRunResponse } from '../contracts/api.ts';
 import type { RunEvent, RunStatus } from '../contracts/events.ts';
-import type { BlastRadiusReport, Measured } from '../contracts/report.ts';
+import type { BlastRadiusReport } from '../contracts/report.ts';
 import { parseConfig, type Config } from '../config.ts';
 import { silentLogger } from '../log.ts';
 import { DEMO_FIXTURE_ID, DEMO_TASK, WORKLOAD_ID } from '../agent/workload.ts';
@@ -118,8 +126,16 @@ function measuredChecks(value: unknown, at: string, failures: string[]): void {
   }
 }
 
-function notMeasured<T>(value: Measured<T>): boolean {
-  return value.state === 'not-measured';
+/**
+ * The provider that served the run, read from the event stream. The control
+ * plane records it; the demo only reads it.
+ */
+function servingProviderOf(events: readonly RunEvent[]): string | null {
+  for (let index = events.length - 1; index >= 0; index -= 1) {
+    const provider = events[index]?.detail['provider'];
+    if (typeof provider === 'string' && provider.length > 0) return provider;
+  }
+  return null;
 }
 
 function checkReport(report: BlastRadiusReport, runStatus: RunStatus): string[] {
@@ -149,26 +165,27 @@ function checkReport(report: BlastRadiusReport, runStatus: RunStatus): string[] 
   measuredChecks(report, 'report', failures);
 
   /*
-   * Brief 04 runs on the non-sealed stand-in. It cannot measure containment, so
-   * the only honest verdict is `incomplete`. D3–D12 are brief 06's assertions.
+   * Brief 06 runs on the sealed bwrap tier. Containment is now measured, and
+   * the verdict must be `contained` or `contained-with-denials` (the containment
+   * probe denies one fetch, so the latter is expected on a healthy run).
    */
-  if (report.verdict !== 'incomplete') {
-    failures.push(`The stand-in produced verdict "${report.verdict}"; it must be "incomplete".`);
+  if (report.verdict !== 'contained' && report.verdict !== 'contained-with-denials') {
+    failures.push(`The sealed run produced verdict "${report.verdict}"; it must be "contained" or "contained-with-denials".`);
   }
   const containment = report.containment;
   if (
-    !notMeasured(containment.processIsolation) ||
-    !notMeasured(containment.secretHygiene) ||
-    !notMeasured(containment.resourceLimits) ||
-    !notMeasured(containment.lifecycle)
+    containment.processIsolation.state !== 'measured' ||
+    containment.secretHygiene.state !== 'measured' ||
+    containment.resourceLimits.state !== 'measured' ||
+    containment.lifecycle.state !== 'measured'
   ) {
-    failures.push('A containment fact is not marked not-measured under the stand-in.');
+    failures.push('A containment fact is not measured under the sealed tier.');
   }
-  if (containment.measurement !== null) {
-    failures.push('The stand-in reported a containment measurement it cannot make.');
+  if (containment.measurement === null) {
+    failures.push('The sealed tier did not report a containment measurement.');
   }
-  if (!notMeasured(report.network.probe)) {
-    failures.push('The direct-egress probe is not marked not-measured under the stand-in.');
+  if (report.network.probe.state !== 'measured') {
+    failures.push('The direct-egress probe is not measured under the sealed tier.');
   }
   if (report.task.workload !== WORKLOAD_ID) {
     failures.push(`The report's workload is ${report.task.workload}, expected ${WORKLOAD_ID}.`);
@@ -237,6 +254,7 @@ async function submit(address: string, port: number): Promise<string> {
 async function oneAttempt(
   running: RunningServer,
   attempt: number,
+  config: Config,
 ): Promise<{ failures: string[]; runStatus: RunStatus | null }> {
   console.log(`\n=== Attempt ${attempt}: submitting the frozen demo task ===`);
   const runId = await submit(running.address, running.port);
@@ -267,6 +285,12 @@ async function oneAttempt(
   console.log(`status:     ${run.status} (${run.phase})${run.errorCode === null ? '' : ` — ${run.errorCode}`}`);
   console.log(`verdict:    ${report.verdict}`);
   console.log(`headline:   ${report.headline}`);
+  console.log(`provider:   ${servingProviderOf(polled.events) ?? 'unknown'}`);
+  console.log(
+    `tokens:     ${run.totalTokens} used${
+      config.runTokenBudget > 0 ? ` (budget ${config.runTokenBudget})` : ' (no budget)'
+    }`,
+  );
   console.log(`files:      ${report.code.filesWritten.length} written (${report.code.filesWritten.filter((f) => f.origin === 'agent').length} by the agent)`);
   console.log(
     `tests:      ${report.code.finalTestRun === null ? 'not measured' : `${report.code.finalTestRun.passed}/${report.code.finalTestRun.total} passed`}`,
@@ -274,7 +298,17 @@ async function oneAttempt(
   console.log(`commands:   ${report.code.commands.length}`);
   console.log(`network:    ${report.network.deniedCount} denied, ${report.network.allowedCount} allowed, probe ${report.network.probe.state}`);
   console.log(`lifecycle:  destroyed=${report.lifecycle.destroyedAt ?? 'never'} teardownVerified=${String(report.lifecycle.teardownVerified)}`);
-  console.log(`containment: ${report.containment.processIsolation.state} (the non-sealed stand-in cannot measure it)`);
+  console.log(`containment: ${report.containment.processIsolation.state} (sealed tier)`);
+
+  if (process.argv.includes('--record')) {
+    const { mkdir, writeFile } = await import('node:fs/promises');
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const dir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'deploy', 'recordings', stamp);
+    await mkdir(dir, { recursive: true });
+    await writeFile(path.join(dir, 'report.json'), JSON.stringify(report, null, 2));
+    await writeFile(path.join(dir, 'events.json'), JSON.stringify(polled.events, null, 2));
+    console.log(`recorded to ${dir}`);
+  }
 
   return { failures: checkReport(report, polled.status), runStatus: polled.status };
 }
@@ -291,9 +325,8 @@ async function main(): Promise<void> {
 
   console.log(`BRZ demo — inference mode: ${config.inference.mode}; provider: ${config.sandboxProvider}`);
   console.log(`temporary state: ${tempDir}`);
-  if (config.sandboxProvider === 'standin') {
-    console.log(`NOTE: the stand-in is NOT containment. Its report must read "incomplete".`);
-  }
+  // The sealed tier is real now: the report should read `contained` (or
+  // `contained-with-denials` because the containment probe denies one fetch).
 
   const provider = createProvider(config.sandboxProvider);
   const running = await startServer({ config, provider, log: silentLogger });
@@ -304,9 +337,10 @@ async function main(): Promise<void> {
   try {
     let succeeded = false;
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      const result = await oneAttempt(running, attempt);
+      const result = await oneAttempt(running, attempt, config);
       if (result.failures.length === 0) {
         console.log(`\nAll demo assertions passed on attempt ${attempt}.`);
+
         succeeded = true;
         break;
       }

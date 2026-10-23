@@ -14,6 +14,14 @@
  * which tier ran, in a product whose value is truthful reports, so the union is
  * widened additively. Brief 06 removes the stand-in; the member can then be
  * deleted.
+ *
+ * AMENDMENT (brief 08, accepted by the HEAD): `ContainmentVerification` gained
+ * exactly two fields — `namespaces` and `projectDirectoryVisible` — both
+ * nullable, both meaning "not measured" when `null`. The frozen probe type
+ * could not fill the frozen report types (`IsolationFact.namespaces`,
+ * `SecretHygieneFact.projectDirectoryVisible`), so a *sealed* run could never
+ * leave `incomplete`. Nothing else in this file changed, and FRONTEND's mirror
+ * of the two report types already carries them.
  */
 
 /** Opaque, externally-visible identifier for one sandbox instance. */
@@ -25,7 +33,7 @@ export type SandboxId = string;
  * `'standin'` is brief-04-only: a plain child process with rlimits, no
  * namespaces and no cgroup. It is NOT containment. Brief 06 replaces it.
  */
-export type SandboxProviderKind = 'bwrap' | 'vultr-vm' | 'standin';
+export type SandboxProviderKind = 'bwrap' | 'vultr-vm';
 
 /**
  * Hard caps applied to every sandboxed execution.
@@ -233,6 +241,25 @@ export interface ContainmentVerification {
   readonly processNamespaceIsolated: boolean;
   /** Could the sandbox reach the broker socket? */
   readonly brokerReachable: boolean;
+  /**
+   * The namespace kinds actually in effect inside the sandbox, read from
+   * `/proc/self/ns/*` from **inside** it — e.g. `['user', 'mount', 'pid',
+   * 'net', 'ipc', 'uts']`.
+   *
+   * `null` means **NOT MEASURED**. It never means "no namespaces", and it is
+   * never a declared list the provider was configured with: the probe reports
+   * what it observed, or nothing at all. An empty array would be a fabricated
+   * measurement, which is exactly what this product exists to prevent.
+   */
+  readonly namespaces: readonly string[] | null;
+  /**
+   * Was the operator's project directory — the one that may hold a `.env` —
+   * visible inside the sandbox?
+   *
+   * `null` means **NOT MEASURED**. It never means `false`: a provider that did
+   * not look must not report that the directory was absent.
+   */
+  readonly projectDirectoryVisible: boolean | null;
   readonly measuredAt: string;
   readonly provider: SandboxProviderKind;
 }
