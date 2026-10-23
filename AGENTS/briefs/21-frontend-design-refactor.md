@@ -1,4 +1,4 @@
-<WORK IN PROGRESS>
+<DONE>
 
 # 21 — Frontend design refactor using design skills
 

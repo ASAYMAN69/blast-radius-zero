@@ -129,17 +129,25 @@ export function Sidebar({
                     <span className="session-row__name">{session.name}</span>
                     <span className="session-row__meta">{formatRelative(session.updatedAt)}</span>
                     {reports.has(session.sessionExternal) && (
-                      <button
-                        type="button"
+                      <span
+                        role="button"
+                        tabIndex={0}
                         className="session-row__report-chip"
                         onClick={(e) => {
                           e.stopPropagation();
                           onOpenReport?.(session.sessionExternal);
                         }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onOpenReport?.(session.sessionExternal);
+                          }
+                        }}
                         aria-label="Open report"
                       >
                         report
-                      </button>
+                      </span>
                     )}
                   </button>
                 )}

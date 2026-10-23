@@ -7,6 +7,8 @@
  * component.
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
 :root {
   color-scheme: light;
 
@@ -22,8 +24,9 @@
   --space-9: 56px;
 
   /* ── type ────────────────────────────────────────────────────────────── */
-  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', ui-monospace, monospace;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
 
   --text-2xs: 11px;
   --text-xs: 12px;

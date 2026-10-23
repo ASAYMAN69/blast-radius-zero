@@ -36,13 +36,6 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
-    // The build must resolve React's production bundle. Some toolchains in the
-    // dependency chain set `NODE_ENV=development` while the config is being
-    // resolved, which would make the bundler pick React's development build.
-    // Stating the value here keeps the production bundle deterministic.
-    define: {
-      'process.env.NODE_ENV': JSON.stringify(mode === 'production' ? 'production' : 'development'),
-    },
     server: {
       port: 5173,
       proxy: {
