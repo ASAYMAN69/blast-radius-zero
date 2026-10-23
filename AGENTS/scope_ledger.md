@@ -34,9 +34,9 @@
 | 2 | `09-commercial-decisions.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **RELEASED** |
 | 2 | `07-commercial-revision.md` | BUSINESS | `docs/business/01-market-and-monetization.md` | — | **RELEASED** |
 | 3 | `06-backend-containment.md` | BACKEND | `backend/src/sandbox/**`, `backend/src/broker/**`, `deploy/**` | `deploy/**` | **RELEASED** |
-| 4 | `10-gitmaster-ci.md` | GITMASTER | `.github/**`, `scripts/ci/**`, `docs/dev/**` | serialized — never concurrent with an open write scope | **READY** |
-| 4 | `11-designer-ui-review.md` | DESIGNER | `docs/design/01-phase1-ui-review.md` | — (read-only on product) | **READY** |
-| 5 | UI polish | FRONTEND | `frontend/**` (the manifest is HEAD's) | — | PLANNED |
+| 4 | `10-gitmaster-ci.md` | GITMASTER | `.github/**`, `scripts/ci/**`, `docs/dev/**` | serialized — never concurrent with an open write scope | **RELEASED** |
+| 4 | `11-designer-ui-review.md` | DESIGNER | `docs/design/01-phase1-ui-review.md` | — (read-only on product) | **RELEASED** |
+| 5 | `12-frontend-polish.md` | FRONTEND | `frontend/**` (manifest is HEAD's) | — | **READY** |
 | 6 | Phase 1 verification | TESTER | `AGENTS/reports/**` | read-only on product | PLANNED |
 | — | `01-vultr-c1-capability-probe.md` | ARCHITECT | `docs/architecture/01-vultr-c1-capability-probe.md` | — | **HOLD** — same agent as wave 1; runs after it |
 
