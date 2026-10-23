@@ -233,6 +233,8 @@ brz/
 
 **Wave 9 is DONE** — BACKEND (sessions + multi-turn agent loop, 7 endpoints, schema v2, 91 tests) and FRONTEND (chat-first UI: dark mode, sidebar, chatbox, right panel, toast, button fixes, 380/97 kB build) both delivered and committed.
 
+**Wave 10 is DONE** — DBMASTER: APPROVED (no SQL changes required, all constraints verified). TESTER: PASS WITH RISKS (Phase 1 regression clean — 91 tests, demo contained, typecheck, build; sessions API fully verified; dark mode, sidebar, chat UI, multi-turn verified via code + API evidence). Two P2 risks (broker/Vultr unit suites, rlimit-only process cap) and one P3 (no browser runtime verification).
+
 **Wave 6 is DONE** — TESTER verified everything. Verdict: **PASS WITH RISKS**. Core containment claim holds and is measured (offline demo `contained`, secret hygiene, no direct egress, caps, lifecycle, broker all verified). Typecheck/tests/build green, secret scan clean, config fails closed. Four risks: P1 frontend type mirror (now fixed), P2 missing dedicated broker/Vultr unit suites, P2 process-cap weakening in rlimit-only mode, P3 stale `byte-identical` wording (now fixed).
 
 **Wave 7 is DONE** — FRONTEND mirror sync (`'standin'` removed, `'provider.rotated'` added, drift check 73=73) and ARCHITECT design-doc wording fix (the `byte-identical` claim corrected to `not byte-identical`, with the one-line note explaining why). Both verified independently.
